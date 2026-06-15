@@ -2,7 +2,13 @@ import { useBookStore } from '../store/bookStore';
 import { Icon, ICONS } from './ui/Icon';
 import type { ViewMode } from '../types';
 
-export function TopBar({ onExport }: { onExport: () => void }) {
+interface TopBarProps {
+  onExport: () => void;
+  onBack: () => void;
+  onMenu: () => void;
+}
+
+export function TopBar({ onExport, onBack, onMenu }: TopBarProps) {
   const meta = useBookStore((s) => s.meta);
   const viewMode = useBookStore((s) => s.viewMode);
   const setViewMode = useBookStore((s) => s.setViewMode);
@@ -15,28 +21,33 @@ export function TopBar({ onExport }: { onExport: () => void }) {
   ];
 
   return (
-    <header className="grain h-14 flex items-center justify-between px-4 bg-panel border-b border-line relative z-20 no-print">
-      <div className="flex items-center gap-3 min-w-0">
-        <div className="flex items-center gap-2.5">
-          <div className="h-8 w-8 rounded-lg bg-ink text-paper grid place-items-center font-display font-semibold text-lg leading-none">
-            K
-          </div>
-          <div className="leading-tight hidden sm:block">
-            <div className="font-display font-semibold text-[15px]">Kitob</div>
-            <div className="text-[10px] uppercase tracking-[0.18em] text-muted">yozuvchi muhiti</div>
-          </div>
-        </div>
-        <div className="flex items-center gap-1.5 ml-2 pl-3 border-l border-line min-w-0">
-          <span className="font-display text-[15px] italic truncate">"{meta.title}"</span>
-          <button className="text-muted hover:text-ink transition shrink-0">
-            <Icon d={ICONS.edit} className="w-3.5 h-3.5" />
-          </button>
+    <header className="grain h-14 flex items-center justify-between px-2 sm:px-4 bg-panel border-b border-line relative z-20 no-print">
+      <div className="flex items-center gap-1.5 sm:gap-3 min-w-0">
+        <button
+          onClick={onBack}
+          className="h-9 w-9 grid place-items-center rounded-lg hover:bg-line/60 transition shrink-0"
+          title="Kitoblarim"
+        >
+          <Icon d={ICONS.back} className="w-5 h-5" />
+        </button>
+
+        {/* chapters drawer toggle — mobile only */}
+        <button
+          onClick={onMenu}
+          className="h-9 w-9 grid place-items-center rounded-lg hover:bg-line/60 transition shrink-0 lg:hidden"
+          title="Mundarija"
+        >
+          <Icon d={ICONS.menu} className="w-5 h-5" />
+        </button>
+
+        <div className="flex items-center gap-1.5 min-w-0">
+          <span className="font-display text-[14px] sm:text-[15px] italic truncate">"{meta.title}"</span>
         </div>
       </div>
 
-      <div className="flex items-center gap-2">
-        {/* view-mode toggle */}
-        <div className="flex items-center bg-paper border border-line rounded-lg p-0.5">
+      <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
+        {/* view-mode toggle (desktop) */}
+        <div className="hidden lg:flex items-center bg-paper border border-line rounded-lg p-0.5">
           {modes.map((m) => (
             <button
               key={m.id}
@@ -51,17 +62,17 @@ export function TopBar({ onExport }: { onExport: () => void }) {
           ))}
         </div>
 
-        <div className="hidden lg:flex items-center gap-1.5 text-[11px] text-muted mx-1">
+        <div className="hidden xl:flex items-center gap-1.5 text-[11px] text-muted mx-1">
           <span className="w-1.5 h-1.5 rounded-full bg-green-600" />
           <span className="tnum">{savedAt ? 'Saqlandi' : 'Tayyor'}</span>
         </div>
 
         <button
           onClick={onExport}
-          className="h-9 px-4 rounded-lg text-[13px] font-medium bg-ink text-paper hover:bg-ink/90 transition flex items-center gap-1.5"
+          className="h-9 px-2.5 sm:px-4 rounded-lg text-[13px] font-medium bg-ink text-paper hover:bg-ink/90 transition flex items-center gap-1.5"
         >
           <Icon d={ICONS.download} className="w-4 h-4" />
-          <span className="hidden sm:inline">Eksport PDF</span>
+          <span className="hidden sm:inline">Eksport</span>
         </button>
       </div>
     </header>

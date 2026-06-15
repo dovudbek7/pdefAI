@@ -10,6 +10,7 @@ interface ExportInput {
   numbering: NumberSettings;
   includeCover: boolean;
   includeToc: boolean;
+  fileName?: string; // becomes the print document title → suggested PDF filename
 }
 
 const FONT_LINK =
@@ -22,6 +23,7 @@ const FONT_LINK =
  */
 export function exportPdf(input: ExportInput) {
   const { result, meta, format, margins, typography, numbering } = input;
+  const docTitle = (input.fileName && input.fileName.trim()) || meta.title;
 
   const sheet = (inner: string, parity: 'odd' | 'even') => `
     <section class="sheet ${parity}">${inner}</section>`;
@@ -62,7 +64,7 @@ export function exportPdf(input: ExportInput) {
     .join('');
 
   const doc = `<!doctype html><html lang="uz"><head><meta charset="utf-8">
-  <title>${esc(meta.title)}</title>
+  <title>${esc(docTitle)}</title>
   <link rel="stylesheet" href="${FONT_LINK}">
   <style>
     @page { size: ${format.widthMm}mm ${format.heightMm}mm; margin: 0; }

@@ -3,6 +3,7 @@ import { useBookStore } from '../../store/bookStore';
 import { FORMATS } from '../../lib/pageFormats';
 import { Icon, ICONS } from '../ui/Icon';
 import { Modal } from '../ui/Modal';
+import { BookSettings } from './BookSettings';
 import type { PageFormatId } from '../../types';
 
 export function PreviewControls() {
@@ -16,6 +17,7 @@ export function PreviewControls() {
   const setTypography = useBookStore((s) => s.setTypography);
 
   const [customOpen, setCustomOpen] = useState(false);
+  const [settingsOpen, setSettingsOpen] = useState(false);
   const [cw, setCw] = useState(format.widthMm);
   const [ch, setCh] = useState(format.heightMm);
 
@@ -42,7 +44,8 @@ export function PreviewControls() {
     }`;
 
   return (
-    <div className="h-12 shrink-0 flex items-center justify-between px-4 border-b border-line bg-panel/60 backdrop-blur">
+    <>
+    <div className="h-12 shrink-0 flex items-center justify-between gap-2 px-3 sm:px-4 border-b border-line bg-panel/60 backdrop-blur overflow-x-auto scroll-thin">
       <div className="flex items-center gap-2">
         <span className="text-[10px] uppercase tracking-[0.2em] text-muted font-medium hidden sm:inline">
           Format
@@ -80,7 +83,17 @@ export function PreviewControls() {
         >
           <Icon d={ICONS.spread} />
         </button>
+        <button
+          className="w-7 h-7 grid place-items-center rounded-md hover:bg-line/60 transition"
+          title="Kitob sozlamalari (chekka, sahifa raqami)"
+          onClick={() => setSettingsOpen(true)}
+        >
+          <Icon d={ICONS.settings} className="w-4 h-4" />
+        </button>
       </div>
+    </div>
+
+      {settingsOpen && <BookSettings onClose={() => setSettingsOpen(false)} />}
 
       {customOpen && (
         <Modal title="Maxsus razmer" onClose={() => setCustomOpen(false)}>
@@ -118,6 +131,6 @@ export function PreviewControls() {
           </div>
         </Modal>
       )}
-    </div>
+    </>
   );
 }

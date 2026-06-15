@@ -49,10 +49,10 @@ export function EditorPane() {
       <Toolbar editor={editor} />
 
       <div className="flex-1 overflow-y-auto scroll-thin">
-        <div className="max-w-2xl mx-auto px-10 py-12">
+        <div className="max-w-2xl mx-auto px-5 sm:px-10 py-6 sm:py-12">
           <EditorContent
             editor={editor}
-            className="text-[18px] leading-[1.85] font-book text-ink"
+            className="text-[17px] sm:text-[18px] leading-[1.8] sm:leading-[1.85] font-book text-ink"
           />
         </div>
       </div>

@@ -17,9 +17,11 @@
     "@tiptap/pm": "^3.26.1",
     "@tiptap/react": "^3.26.1",
     "@tiptap/starter-kit": "^3.26.1",
+    "html-docx-js-typescript": "^0.1.5",
     "pagedjs": "^0.4.3",
     "react": "^19.2.6",
     "react-dom": "^19.2.6",
+    "react-router-dom": "^7.17.0",
     "zustand": "^5.0.14"
   },
   "devDependencies": {

@@ -53,6 +53,7 @@ export function Toolbar({ editor }: { editor: Editor | null }) {
     }`;
 
   return (
+    <>
     <div className="h-12 shrink-0 border-b border-line flex items-center gap-1 px-3 bg-paper/80 backdrop-blur overflow-x-auto scroll-thin">
       <select
         value={styleOf(editor)}
@@ -147,6 +148,7 @@ export function Toolbar({ editor }: { editor: Editor | null }) {
           <Icon d={ICONS.redo} />
         </button>
       </div>
+    </div>
 
       {imgOpen && (
         <Modal title="Rasm qo'shish" onClose={() => setImgOpen(false)}>
@@ -188,6 +190,6 @@ export function Toolbar({ editor }: { editor: Editor | null }) {
           </div>
         </Modal>
       )}
-    </div>
+    </>
   );
 }

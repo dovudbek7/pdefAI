@@ -11,14 +11,20 @@ function wordCount(html: string) {
   return t ? t.split(/\s+/).length : 0;
 }
 
-export function ChapterRail({ result }: { result: PaginateResult }) {
+export function ChapterRail({
+  result,
+  onNavigate,
+}: {
+  result: PaginateResult;
+  onNavigate?: () => void;
+}) {
   const content = useBookStore((s) => s.content);
   const words = useMemo(() => wordCount(content), [content]);
   const pages = result.pages.length;
   const pct = Math.min(100, Math.round((words / GOAL) * 100));
 
   return (
-    <aside className="w-64 shrink-0 bg-panel border-r border-line flex flex-col">
+    <aside className="w-64 shrink-0 h-full bg-panel border-r border-line flex flex-col">
       <div className="px-4 pt-4 pb-3 flex items-center justify-between">
         <h2 className="text-[10px] uppercase tracking-[0.2em] text-muted font-medium">Mundarija</h2>
         <span className="text-muted/60">
@@ -45,6 +51,7 @@ export function ChapterRail({ result }: { result: PaginateResult }) {
                   '.ProseMirror h1, .ProseMirror h2, .ProseMirror h3',
                 );
                 headings[i]?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                onNavigate?.();
               }}
               className={`group flex items-center gap-2 rounded-lg hover:bg-line/50 transition cursor-pointer ${
                 t.level === 1 ? 'px-2.5 py-2' : 'pl-7 pr-2.5 py-1.5 text-muted'
