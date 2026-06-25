@@ -50,8 +50,12 @@ export const useAuthStore = create<AuthState>()((set) => ({
         method: 'POST',
         body: JSON.stringify({ name, email: email.trim().toLowerCase(), password }),
       });
-      const data = await res.json() as AuthResponse & { email?: string[]; detail?: string };
-      if (!res.ok) return { ok: false, error: data.detail ?? data.email?.[0] ?? 'Xatolik yuz berdi.' };
+      const data = await res.json() as AuthResponse & Record<string, string[] | string | undefined>;
+      if (!res.ok) {
+        const firstError = Object.values(data).find((v) => v !== undefined);
+        const msg = Array.isArray(firstError) ? firstError[0] : (firstError as string | undefined);
+        return { ok: false, error: msg ?? 'Xatolik yuz berdi.' };
+      }
       saveTokens(data);
       set({ currentUser: data.user });
       return { ok: true };
