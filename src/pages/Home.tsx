@@ -8,21 +8,22 @@ import { Icon, ICONS } from '../components/ui/Icon';
 export default function Home() {
   const navigate = useNavigate();
   const projects = useBookStore((s) => s.projects);
+  const loading = useBookStore((s) => s.loading);
+  const error = useBookStore((s) => s.error);
+  const loadProjects = useBookStore((s) => s.loadProjects);
   const createProject = useBookStore((s) => s.createProject);
   const user = useAuthStore((s) => s.currentUser);
   const logout = useAuthStore((s) => s.logout);
-  const ensureDemo = useBookStore((s) => s.ensureDemo);
 
-  // Everyone gets one sample book to start with.
   useEffect(() => {
-    ensureDemo();
-  }, [ensureDemo]);
+    loadProjects();
+  }, [loadProjects]);
 
   const sorted = [...projects].sort((a, b) => b.updatedAt - a.updatedAt);
 
-  const create = () => {
-    const id = createProject(undefined, projects.length === 0);
-    navigate(`/editor/${id}`);
+  const create = async () => {
+    const id = await createProject();
+    if (id) navigate(`/editor/${id}`);
   };
 
   return (
@@ -59,19 +60,30 @@ export default function Home() {
           <div>
             <h1 className="font-display text-3xl sm:text-4xl font-semibold">Kitoblarim</h1>
             <p className="text-[13px] sm:text-[14px] text-muted mt-1">
-              {projects.length > 0 ? `${projects.length} ta loyiha` : 'Hali loyiha yo`q'}
+              {loading ? 'Yuklanmoqda…' : projects.length > 0 ? `${projects.length} ta loyiha` : 'Hali loyiha yo`q'}
             </p>
           </div>
           <button
             onClick={create}
-            className="h-10 sm:h-11 px-4 sm:px-5 rounded-xl bg-ink text-paper font-medium text-[14px] hover:bg-ink/90 transition flex items-center gap-2 shrink-0"
+            disabled={loading}
+            className="h-10 sm:h-11 px-4 sm:px-5 rounded-xl bg-ink text-paper font-medium text-[14px] hover:bg-ink/90 transition flex items-center gap-2 shrink-0 disabled:opacity-50"
           >
             <Icon d={ICONS.plus} className="w-4 h-4" stroke={2.2} />
             <span className="hidden xs:inline">Yangi kitob</span>
           </button>
         </div>
 
-        {sorted.length === 0 ? (
+        {error && (
+          <div className="mb-6 rounded-xl bg-accentsoft/30 border border-accentsoft text-accent text-[13px] px-4 py-3">
+            {error}
+          </div>
+        )}
+
+        {loading ? (
+          <div className="flex justify-center py-24">
+            <div className="w-8 h-8 border-2 border-line border-t-ink rounded-full animate-spin" />
+          </div>
+        ) : sorted.length === 0 ? (
           <button
             onClick={create}
             className="w-full rounded-2xl border-2 border-dashed border-line hover:border-accent/40 hover:bg-panel/60 transition py-16 sm:py-24 flex flex-col items-center gap-3 text-muted"
