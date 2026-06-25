@@ -114,9 +114,6 @@ export function AuthForm({ mode }: { mode: 'login' | 'register' }) {
           </div>
         </div>
 
-        <p className="text-center text-[11px] text-muted/70 mt-5">
-          Ma`lumotlaringiz xavfsiz serverda saqlanadi.
-        </p>
       </div>
     </div>
   );
