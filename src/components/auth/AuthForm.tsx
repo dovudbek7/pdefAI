@@ -15,10 +15,10 @@ export function AuthForm({ mode }: { mode: 'login' | 'register' }) {
 
   const isRegister = mode === 'register';
 
-  const submit = (e: FormEvent) => {
+  const submit = async (e: FormEvent) => {
     e.preventDefault();
     setError('');
-    const res = isRegister ? register(name, email, password) : login(email, password);
+    const res = isRegister ? await register(name, email, password) : await login(email, password);
     if (res.ok) navigate('/');
     else setError(res.error ?? 'Xatolik yuz berdi.');
   };
@@ -115,7 +115,7 @@ export function AuthForm({ mode }: { mode: 'login' | 'register' }) {
         </div>
 
         <p className="text-center text-[11px] text-muted/70 mt-5">
-          Demo: ma`lumot brauzeringizda saqlanadi.
+          Ma`lumotlaringiz xavfsiz serverda saqlanadi.
         </p>
       </div>
     </div>

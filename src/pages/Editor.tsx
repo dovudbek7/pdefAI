@@ -30,8 +30,9 @@ export default function Editor() {
   useEffect(() => {
     if (!id) return;
     if (activeId !== id) {
-      const ok = loadProject(id);
-      if (!ok) navigate('/', { replace: true });
+      loadProject(id).then((ok) => {
+        if (!ok) navigate('/', { replace: true });
+      });
     }
   }, [id, activeId, loadProject, navigate]);
 
