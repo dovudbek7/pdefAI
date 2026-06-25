@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { persist } from 'zustand/middleware';
+import { apiFetch } from '../lib/api';
 
 export interface User {
   id: string;
@@ -7,52 +7,78 @@ export interface User {
   email: string;
 }
 
-interface StoredUser extends User {
-  password: string; // demo only — plaintext, replaced by Django backend later
-}
-
 interface AuthState {
-  users: StoredUser[];
   currentUser: User | null;
-  register: (name: string, email: string, password: string) => { ok: boolean; error?: string };
-  login: (email: string, password: string) => { ok: boolean; error?: string };
+  loading: boolean;
+  register: (name: string, email: string, password: string) => Promise<{ ok: boolean; error?: string }>;
+  login: (email: string, password: string) => Promise<{ ok: boolean; error?: string }>;
   logout: () => void;
+  init: () => Promise<void>;
 }
 
-const newId = () => `u_${Date.now().toString(36)}_${Math.floor(Math.random() * 1e6).toString(36)}`;
-const strip = (u: StoredUser): User => ({ id: u.id, name: u.name, email: u.email });
+type AuthResponse = { access: string; refresh: string; user: User };
 
-export const useAuthStore = create<AuthState>()(
-  persist(
-    (set, get) => ({
-      users: [],
-      currentUser: null,
+function saveTokens(data: AuthResponse) {
+  localStorage.setItem('kitob-access', data.access);
+  localStorage.setItem('kitob-refresh', data.refresh);
+}
 
-      register: (name, email, password) => {
-        email = email.trim().toLowerCase();
-        if (!name.trim() || !email || password.length < 4) {
-          return { ok: false, error: "Ism, email va kamida 4 belgili parol kerak." };
-        }
-        if (get().users.some((u) => u.email === email)) {
-          return { ok: false, error: 'Bu email allaqachon ro`yxatdan o`tgan.' };
-        }
-        const user: StoredUser = { id: newId(), name: name.trim(), email, password };
-        set((s) => ({ users: [...s.users, user], currentUser: strip(user) }));
-        return { ok: true };
-      },
+export const useAuthStore = create<AuthState>()((set) => ({
+  currentUser: null,
+  loading: false,
 
-      login: (email, password) => {
-        email = email.trim().toLowerCase();
-        const u = get().users.find((x) => x.email === email);
-        if (!u || u.password !== password) {
-          return { ok: false, error: 'Email yoki parol noto`g`ri.' };
-        }
-        set({ currentUser: strip(u) });
-        return { ok: true };
-      },
+  init: async () => {
+    if (!localStorage.getItem('kitob-access')) return;
+    set({ loading: true });
+    try {
+      const res = await apiFetch('/api/auth/me/');
+      if (res.ok) {
+        const user = await res.json() as User;
+        set({ currentUser: user });
+      } else {
+        localStorage.removeItem('kitob-access');
+        localStorage.removeItem('kitob-refresh');
+      }
+    } finally {
+      set({ loading: false });
+    }
+  },
 
-      logout: () => set({ currentUser: null }),
-    }),
-    { name: 'kitob-auth-v1' },
-  ),
-);
+  register: async (name, email, password) => {
+    try {
+      const res = await apiFetch('/api/auth/register/', {
+        method: 'POST',
+        body: JSON.stringify({ name, email: email.trim().toLowerCase(), password }),
+      });
+      const data = await res.json() as AuthResponse & { email?: string[]; detail?: string };
+      if (!res.ok) return { ok: false, error: data.detail ?? data.email?.[0] ?? 'Xatolik yuz berdi.' };
+      saveTokens(data);
+      set({ currentUser: data.user });
+      return { ok: true };
+    } catch {
+      return { ok: false, error: 'Tarmoq xatosi. Internetni tekshiring.' };
+    }
+  },
+
+  login: async (email, password) => {
+    try {
+      const res = await apiFetch('/api/auth/login/', {
+        method: 'POST',
+        body: JSON.stringify({ email: email.trim().toLowerCase(), password }),
+      });
+      const data = await res.json() as AuthResponse & { detail?: string };
+      if (!res.ok) return { ok: false, error: data.detail ?? 'Email yoki parol noto\'g\'ri.' };
+      saveTokens(data);
+      set({ currentUser: data.user });
+      return { ok: true };
+    } catch {
+      return { ok: false, error: 'Tarmoq xatosi. Internetni tekshiring.' };
+    }
+  },
+
+  logout: () => {
+    localStorage.removeItem('kitob-access');
+    localStorage.removeItem('kitob-refresh');
+    set({ currentUser: null });
+  },
+}));
