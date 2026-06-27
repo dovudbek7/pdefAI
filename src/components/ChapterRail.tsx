@@ -3,8 +3,6 @@ import { useBookStore } from '../store/bookStore';
 import type { PaginateResult } from '../lib/paginate';
 import { Icon, ICONS } from './ui/Icon';
 
-const GOAL = 20000;
-
 function wordCount(html: string) {
   const text = new DOMParser().parseFromString(html, 'text/html').body.textContent ?? '';
   const t = text.trim();
@@ -21,7 +19,6 @@ export function ChapterRail({
   const content = useBookStore((s) => s.content);
   const words = useMemo(() => wordCount(content), [content]);
   const pages = result.pages.length;
-  const pct = Math.min(100, Math.round((words / GOAL) * 100));
 
   return (
     <aside className="w-64 shrink-0 h-full bg-panel border-r border-line flex flex-col">
@@ -42,11 +39,9 @@ export function ChapterRail({
             <div
               key={t.id}
               onClick={() => {
-                // scroll the book preview to the page…
                 document
                   .getElementById(`page-${t.pageIndex}`)
                   ?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-                // …and the editor to the matching heading (same order as TOC)
                 const headings = document.querySelectorAll<HTMLElement>(
                   '.ProseMirror h1, .ProseMirror h2, .ProseMirror h3',
                 );
@@ -72,7 +67,7 @@ export function ChapterRail({
         )}
       </div>
 
-      <div className="border-t border-line p-4 space-y-3">
+      <div className="border-t border-line p-4">
         <div className="flex items-end justify-between">
           <div>
             <div className="font-display text-2xl leading-none tnum">{words.toLocaleString('ru')}</div>
@@ -82,12 +77,6 @@ export function ChapterRail({
             <div className="font-display text-2xl leading-none tnum">{pages}</div>
             <div className="text-[10px] uppercase tracking-[0.15em] text-muted mt-1">sahifa</div>
           </div>
-        </div>
-        <div className="h-1.5 rounded-full bg-line overflow-hidden">
-          <div className="h-full bg-accent rounded-full transition-all" style={{ width: `${pct}%` }} />
-        </div>
-        <div className="text-[10px] text-muted">
-          Maqsad: {GOAL.toLocaleString('ru')} so'z · {pct}%
         </div>
       </div>
     </aside>
