@@ -3,16 +3,16 @@ import StarterKit from '@tiptap/starter-kit';
 import Placeholder from '@tiptap/extension-placeholder';
 import Image from '@tiptap/extension-image';
 import TextAlign from '@tiptap/extension-text-align';
-import { Extension } from '@tiptap/core';
 import { useEffect, useMemo } from 'react';
 import { Toolbar } from './Toolbar';
 import { ImageNodeView } from './ImageNodeView';
 import { useBookStore } from '../../store/bookStore';
 import { Icon, ICONS } from '../ui/Icon';
 
-function countWords(text: string) {
-  const t = text.trim();
-  return t ? t.split(/\s+/).length : 0;
+// Strip HTML tags and count words from raw HTML — avoids stale editor.getText() reads
+function countWordsFromHtml(html: string) {
+  const text = html.replace(/<[^>]*>/g, ' ').replace(/&[a-z]+;/g, ' ').trim();
+  return text ? text.split(/\s+/).filter(Boolean).length : 0;
 }
 
 function fileToBase64(file: File): Promise<string> {
@@ -24,32 +24,24 @@ function fileToBase64(file: File): Promise<string> {
   });
 }
 
-// Extension that handles image drop + paste via editorProps
-const ImageDropPaste = Extension.create({
-  name: 'imageDropPaste',
-
-  addProseMirrorPlugins() {
-    return [];
+// Defined outside the component so it is not re-created on every render
+const CustomImage = Image.extend({
+  addAttributes() {
+    return {
+      ...this.parent?.(),
+      width: { default: null },
+      'data-align': { default: 'left' },
+    };
   },
-});
+  addNodeView() {
+    return ReactNodeViewRenderer(ImageNodeView);
+  },
+}).configure({ inline: false, allowBase64: true });
 
 export function EditorPane() {
   const content = useBookStore((s) => s.content);
   const setContent = useBookStore((s) => s.setContent);
   const savedAt = useBookStore((s) => s.savedAt);
-
-  const CustomImage = Image.extend({
-    addAttributes() {
-      return {
-        ...this.parent?.(),
-        width: { default: null },
-        'data-align': { default: 'left' },
-      };
-    },
-    addNodeView() {
-      return ReactNodeViewRenderer(ImageNodeView);
-    },
-  }).configure({ inline: false, allowBase64: true });
 
   const editor = useEditor({
     extensions: [
@@ -89,8 +81,7 @@ export function EditorPane() {
           const file = item.getAsFile();
           if (!file) return;
           const src = await fileToBase64(file);
-          const view = editor?.view;
-          if (!view) return;
+          const view = _view;
           const { schema } = view.state;
           const node = schema.nodes.image.create({ src });
           const tr = view.state.tr.replaceSelectionWith(node);
@@ -108,7 +99,7 @@ export function EditorPane() {
     }
   }, [editor, content]);
 
-  const words = useMemo(() => countWords(editor?.getText() ?? ''), [editor, content]);
+  const words = useMemo(() => countWordsFromHtml(content), [content]);
   const readMin = Math.max(1, Math.round(words / 200));
   const savedLabel = savedAt ? 'Saqlandi' : 'Tayyor';
 

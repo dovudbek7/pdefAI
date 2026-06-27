@@ -35,7 +35,8 @@ export default function Editor() {
     if (!id) return;
     if (activeId !== id) {
       loadProject(id).then((ok) => {
-        if (!ok) navigate('/', { replace: true });
+        if (ok === false) navigate('/', { replace: true });
+        // ok === null means network error → stay on page, user can retry
       });
     }
   }, [id, activeId, loadProject, navigate]);

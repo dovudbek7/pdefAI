@@ -5,6 +5,7 @@ import type {
   NumberSettings,
   PageBorder,
   PageFormat,
+  PageFormatId,
   Typography,
   ViewMode,
 } from '../types';
@@ -54,8 +55,8 @@ interface BookState extends BookDoc {
   flushSave: () => void;
 
   loadProjects: () => Promise<void>;
-  createProject: (name?: string) => Promise<string | null>;
-  loadProject: (id: string) => Promise<boolean>;
+  createProject: (name?: string, formatId?: string) => Promise<string | null>;
+  loadProject: (id: string) => Promise<boolean | null>;
   deleteProject: (id: string) => Promise<void>;
   renameProject: (id: string, name: string) => void;
 }
@@ -208,9 +209,12 @@ export const useBookStore = create<BookState>()((set, get) => ({
     }
   },
 
-  createProject: async (name) => {
+  createProject: async (name, formatId) => {
     const title = (name && name.trim()) || 'Yangi kitob';
     const doc = defaultDoc(title);
+    if (formatId && FORMATS[formatId as PageFormatId]) {
+      doc.format = FORMATS[formatId as PageFormatId];
+    }
     try {
       const res = await apiFetch('/api/projects/', {
         method: 'POST',
@@ -248,7 +252,7 @@ export const useBookStore = create<BookState>()((set, get) => ({
       }));
       return true;
     } catch {
-      return false;
+      return null;  // network error — caller should NOT redirect
     }
   },
 
