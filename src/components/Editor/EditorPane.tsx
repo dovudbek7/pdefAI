@@ -3,7 +3,7 @@ import StarterKit from '@tiptap/starter-kit';
 import Placeholder from '@tiptap/extension-placeholder';
 import Image from '@tiptap/extension-image';
 import TextAlign from '@tiptap/extension-text-align';
-import { useEffect, useMemo } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Toolbar } from './Toolbar';
 import { ImageNodeView } from './ImageNodeView';
 import { useBookStore } from '../../store/bookStore';
@@ -42,6 +42,17 @@ export function EditorPane() {
   const content = useBookStore((s) => s.content);
   const setContent = useBookStore((s) => s.setContent);
   const savedAt = useBookStore((s) => s.savedAt);
+  const dirty = useBookStore((s) => s.dirty);
+  const flushSave = useBookStore((s) => s.flushSave);
+
+  const [saving, setSaving] = useState(false);
+
+  const handleSave = async () => {
+    if (saving) return;
+    setSaving(true);
+    await flushSave();
+    setSaving(false);
+  };
 
   const editor = useEditor({
     extensions: [
@@ -101,7 +112,6 @@ export function EditorPane() {
 
   const words = useMemo(() => countWordsFromHtml(content), [content]);
   const readMin = Math.max(1, Math.round(words / 200));
-  const savedLabel = savedAt ? 'Saqlandi' : 'Saqlanmagan';
 
   return (
     <main className="flex-1 min-w-0 flex flex-col bg-paper grain">
@@ -116,15 +126,31 @@ export function EditorPane() {
         </div>
       </div>
 
-      <div className="h-9 shrink-0 border-t border-line flex items-center justify-between px-4 text-[11px] text-muted bg-paper/80">
-        <div className="flex items-center gap-4">
+      <div className="h-9 shrink-0 border-t border-line flex items-center justify-between px-4 text-[11px] bg-paper/80">
+        <div className="flex items-center gap-4 text-muted">
           <span className="tnum">{words.toLocaleString('ru')} so'z</span>
           <span className="tnum hidden sm:inline">{readMin} daqiqa o'qish</span>
         </div>
-        <div className={`flex items-center gap-1.5 ${savedAt ? 'text-muted' : 'text-amber-600'}`}>
-          <Icon d={savedAt ? ICONS.check : ICONS.save} className="w-3.5 h-3.5" />
-          <span>{savedLabel}</span>
-        </div>
+
+        {dirty ? (
+          <button
+            onClick={handleSave}
+            disabled={saving}
+            className="flex items-center gap-1.5 text-amber-600 hover:text-amber-700 transition disabled:opacity-60 font-medium"
+          >
+            {saving ? (
+              <span className="w-3 h-3 border-2 border-amber-300 border-t-amber-600 rounded-full animate-spin" />
+            ) : (
+              <Icon d={ICONS.save} className="w-3.5 h-3.5" />
+            )}
+            <span>{saving ? 'Saqlanmoqda…' : 'Saqlash'}</span>
+          </button>
+        ) : (
+          <div className="flex items-center gap-1.5 text-muted">
+            <Icon d={ICONS.check} className="w-3.5 h-3.5" />
+            <span>{savedAt ? 'Saqlandi' : 'Tayyor'}</span>
+          </div>
+        )}
       </div>
     </main>
   );

@@ -36,6 +36,7 @@ interface BookState extends BookDoc {
   zoom: number;
   spread: boolean;
   savedAt: number;
+  dirty: boolean;
   loading: boolean;
   error: string | null;
 
@@ -116,7 +117,7 @@ function scheduleSave(getState: () => BookState) {
       body: JSON.stringify(patch),
     }).then((res) => {
       if (res.ok) {
-        useBookStore.setState({ savedAt: Date.now() });
+        useBookStore.setState({ savedAt: Date.now(), dirty: false });
       }
     }).catch(() => {});
   }, 8000);
@@ -130,31 +131,32 @@ export const useBookStore = create<BookState>()((set, get) => ({
   zoom: 1,
   spread: false,
   savedAt: 0,
+  dirty: false,
   loading: false,
   error: null,
 
   setMeta: (m) => {
-    set((s) => ({ meta: { ...s.meta, ...m } }));
+    set((s) => ({ meta: { ...s.meta, ...m }, dirty: true }));
     scheduleSave(get);
   },
   setFormat: (f) => {
-    set({ format: f });
+    set({ format: f, dirty: true });
     scheduleSave(get);
   },
   setMargins: (m) => {
-    set((s) => ({ margins: { ...s.margins, ...m } }));
+    set((s) => ({ margins: { ...s.margins, ...m }, dirty: true }));
     scheduleSave(get);
   },
   setNumbering: (n) => {
-    set((s) => ({ numbering: { ...s.numbering, ...n } }));
+    set((s) => ({ numbering: { ...s.numbering, ...n }, dirty: true }));
     scheduleSave(get);
   },
   setTypography: (t) => {
-    set((s) => ({ typography: { ...s.typography, ...t } }));
+    set((s) => ({ typography: { ...s.typography, ...t }, dirty: true }));
     scheduleSave(get);
   },
   setContent: (html) => {
-    set({ content: html });
+    set({ content: html, dirty: true });
     scheduleSave(get);
   },
 
@@ -178,12 +180,12 @@ export const useBookStore = create<BookState>()((set, get) => ({
       method: 'PATCH',
       body: JSON.stringify(patch),
     }).then((res) => {
-      if (res.ok) useBookStore.setState({ savedAt: Date.now() });
+      if (res.ok) useBookStore.setState({ savedAt: Date.now(), dirty: false });
     }).catch(() => {});
   },
 
   setBorder: (b) => {
-    set((s) => ({ border: { ...s.border, ...b } }));
+    set((s) => ({ border: { ...s.border, ...b }, dirty: true }));
     scheduleSave(get);
   },
 
@@ -237,7 +239,7 @@ export const useBookStore = create<BookState>()((set, get) => ({
   loadProject: async (id) => {
     const p = get().projects.find((x) => x.id === id);
     if (p) {
-      set({ activeId: id, ...docFields(p), savedAt: p.updatedAt });
+      set({ activeId: id, ...docFields(p), savedAt: p.updatedAt, dirty: false });
       return true;
     }
     try {
@@ -249,6 +251,7 @@ export const useBookStore = create<BookState>()((set, get) => ({
         activeId: id,
         ...docFields(project),
         savedAt: project.updatedAt,
+        dirty: false,
       }));
       return true;
     } catch {
