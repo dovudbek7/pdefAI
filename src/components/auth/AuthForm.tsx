@@ -32,10 +32,10 @@ export function AuthForm({ mode }: { mode: 'login' | 'register' }) {
         {/* brand */}
         <div className="flex items-center justify-center gap-2.5 mb-8">
           <div className="h-10 w-10 rounded-xl bg-ink text-paper grid place-items-center font-display font-semibold text-xl leading-none">
-            K
+            M
           </div>
           <div className="leading-tight">
-            <div className="font-display font-semibold text-xl">Kitob</div>
+            <div className="font-display font-semibold text-xl">Muslihun</div>
             <div className="text-[10px] uppercase tracking-[0.18em] text-muted">yozuvchi muhiti</div>
           </div>
         </div>
