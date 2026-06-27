@@ -48,6 +48,8 @@ interface BookState extends BookDoc {
   setZoom: (z: number) => void;
   toggleSpread: () => void;
 
+  flushSave: () => void;
+
   loadProjects: () => Promise<void>;
   createProject: (name?: string) => Promise<string | null>;
   loadProject: (id: string) => Promise<boolean>;
@@ -145,6 +147,29 @@ export const useBookStore = create<BookState>()((set, get) => ({
   setContent: (html) => {
     set({ content: html });
     scheduleSave(get);
+  },
+
+  flushSave: () => {
+    if (saveTimer) {
+      clearTimeout(saveTimer);
+      saveTimer = null;
+    }
+    const s = get();
+    if (!s.activeId) return;
+    const patch: Partial<BookDoc> = {
+      meta: s.meta,
+      format: s.format,
+      margins: s.margins,
+      numbering: s.numbering,
+      typography: s.typography,
+      content: s.content,
+    };
+    apiFetch(`/api/projects/${s.activeId}/`, {
+      method: 'PATCH',
+      body: JSON.stringify(patch),
+    }).then((res) => {
+      if (res.ok) useBookStore.setState({ savedAt: Date.now() });
+    }).catch(() => {});
   },
 
   setViewMode: (v) => set({ viewMode: v }),
