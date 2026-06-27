@@ -152,8 +152,16 @@ export function ExportDialog({
           </div>
         </div>
 
-        <div className="px-5 py-3 border-t border-line text-[12px] text-muted text-center">
-          {result.pages.length} sahifa · {format.label}
+        <div className="px-5 py-3 border-t border-line flex items-center justify-between shrink-0">
+          <span className="text-[12px] text-muted">{result.pages.length} sahifa · {format.label}</span>
+          <a
+            href="https://t.me/ContactKaizenBot"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-[11px] text-muted hover:text-ink transition underline underline-offset-2"
+          >
+            Murojat
+          </a>
         </div>
       </div>
     </div>
