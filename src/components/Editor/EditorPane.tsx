@@ -32,13 +32,12 @@ export function EditorPane() {
     },
   });
 
-  // Keep editor in sync if content is replaced externally (e.g. restored).
+  // Keep editor in sync when content is replaced externally (e.g. loadProject async).
   useEffect(() => {
     if (editor && editor.getHTML() !== content) {
       editor.commands.setContent(content, { emitUpdate: false });
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [editor]);
+  }, [editor, content]);
 
   const words = useMemo(() => countWords(editor?.getText() ?? ''), [editor, content]);
   const readMin = Math.max(1, Math.round(words / 200));
