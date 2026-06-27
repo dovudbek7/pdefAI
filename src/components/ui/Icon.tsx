@@ -61,4 +61,5 @@ export const ICONS = {
   doc: 'M7 3h7l5 5v13H7zM14 3v5h5',
   pencil: 'M16.5 3.5a2 2 0 112.8 2.8L8 17.6l-4 1 1-4 11.5-11.1z',
   write: 'M4 20h16M4 16l9-9 4 4-9 9H4z',
+  save: 'M4 17v2a2 2 0 002 2h12a2 2 0 002-2v-2M7 11l5-5 5 5M12 6v10',
 };

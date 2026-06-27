@@ -55,9 +55,13 @@ export default function Editor() {
     if (!isDesktop && viewMode === 'split') setViewMode('editor');
   }, [isDesktop, viewMode, setViewMode]);
 
-  // Cmd/Ctrl + \  → cycle view mode (desktop testing).
+  // Cmd/Ctrl + S → manual save; Cmd/Ctrl + \ → cycle view mode.
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key === 's') {
+        e.preventDefault();
+        flushSave();
+      }
       if ((e.metaKey || e.ctrlKey) && e.key === '\\') {
         e.preventDefault();
         cycleViewMode();
@@ -65,7 +69,7 @@ export default function Editor() {
     };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
-  }, [cycleViewMode]);
+  }, [cycleViewMode, flushSave]);
 
   const showEditor = viewMode !== 'preview';
   const showPreview = viewMode !== 'editor';

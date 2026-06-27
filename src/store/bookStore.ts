@@ -52,7 +52,7 @@ interface BookState extends BookDoc {
   setZoom: (z: number) => void;
   toggleSpread: () => void;
 
-  flushSave: () => void;
+  flushSave: () => Promise<void>;
 
   loadProjects: () => Promise<void>;
   createProject: (name?: string, formatId?: string) => Promise<string | null>;
@@ -94,7 +94,7 @@ function docFields(p: Project): BookDoc {
   };
 }
 
-// Debounced PATCH: fires 1500ms after the last setter call.
+// Debounced PATCH: fires 8000ms after the last setter call (backup only — manual save is primary).
 let saveTimer: ReturnType<typeof setTimeout> | null = null;
 
 function scheduleSave(getState: () => BookState) {
@@ -119,7 +119,7 @@ function scheduleSave(getState: () => BookState) {
         useBookStore.setState({ savedAt: Date.now() });
       }
     }).catch(() => {});
-  }, 1500);
+  }, 8000);
 }
 
 export const useBookStore = create<BookState>()((set, get) => ({
@@ -164,7 +164,7 @@ export const useBookStore = create<BookState>()((set, get) => ({
       saveTimer = null;
     }
     const s = get();
-    if (!s.activeId) return;
+    if (!s.activeId) return Promise.resolve();
     const patch: Partial<BookDoc> = {
       meta: s.meta,
       format: s.format,
@@ -174,7 +174,7 @@ export const useBookStore = create<BookState>()((set, get) => ({
       content: s.content,
       border: s.border,
     };
-    apiFetch(`/api/projects/${s.activeId}/`, {
+    return apiFetch(`/api/projects/${s.activeId}/`, {
       method: 'PATCH',
       body: JSON.stringify(patch),
     }).then((res) => {

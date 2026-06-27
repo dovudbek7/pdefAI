@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { useBookStore } from '../store/bookStore';
 import { Icon, ICONS } from './ui/Icon';
 import type { ViewMode } from '../types';
@@ -12,7 +13,19 @@ export function TopBar({ onExport, onBack, onMenu }: TopBarProps) {
   const meta = useBookStore((s) => s.meta);
   const viewMode = useBookStore((s) => s.viewMode);
   const setViewMode = useBookStore((s) => s.setViewMode);
-  const savedAt = useBookStore((s) => s.savedAt);
+  const flushSave = useBookStore((s) => s.flushSave);
+
+  const [saving, setSaving] = useState(false);
+  const [justSaved, setJustSaved] = useState(false);
+
+  const handleSave = async () => {
+    if (saving) return;
+    setSaving(true);
+    await flushSave();
+    setSaving(false);
+    setJustSaved(true);
+    setTimeout(() => setJustSaved(false), 2000);
+  };
 
   const modes: { id: ViewMode; icon: string; label: string }[] = [
     { id: 'editor', icon: ICONS.textOnly, label: 'Faqat matn' },
@@ -62,10 +75,28 @@ export function TopBar({ onExport, onBack, onMenu }: TopBarProps) {
           ))}
         </div>
 
-        <div className="hidden xl:flex items-center gap-1.5 text-[11px] text-muted mx-1">
-          <span className="w-1.5 h-1.5 rounded-full bg-green-600" />
-          <span className="tnum">{savedAt ? 'Saqlandi' : 'Tayyor'}</span>
-        </div>
+        {/* Save button */}
+        <button
+          onClick={handleSave}
+          disabled={saving}
+          title="Saqlash (⌘S)"
+          className={`h-9 px-2.5 sm:px-3.5 rounded-lg text-[13px] font-medium border transition flex items-center gap-1.5 disabled:opacity-60 ${
+            justSaved
+              ? 'border-green-300/70 bg-green-50 text-green-700'
+              : 'border-line hover:bg-line/60 text-ink'
+          }`}
+        >
+          {saving ? (
+            <span className="w-3.5 h-3.5 border-2 border-ink/20 border-t-ink rounded-full animate-spin" />
+          ) : justSaved ? (
+            <Icon d={ICONS.check} className="w-3.5 h-3.5" />
+          ) : (
+            <Icon d={ICONS.save} className="w-3.5 h-3.5" />
+          )}
+          <span className="hidden sm:inline">
+            {saving ? 'Saqlanmoqda…' : justSaved ? 'Saqlandi' : 'Saqlash'}
+          </span>
+        </button>
 
         <button
           onClick={onExport}

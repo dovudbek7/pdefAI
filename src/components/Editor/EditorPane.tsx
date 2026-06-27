@@ -101,7 +101,7 @@ export function EditorPane() {
 
   const words = useMemo(() => countWordsFromHtml(content), [content]);
   const readMin = Math.max(1, Math.round(words / 200));
-  const savedLabel = savedAt ? 'Saqlandi' : 'Tayyor';
+  const savedLabel = savedAt ? 'Saqlandi' : 'Saqlanmagan';
 
   return (
     <main className="flex-1 min-w-0 flex flex-col bg-paper grain">
@@ -121,9 +121,9 @@ export function EditorPane() {
           <span className="tnum">{words.toLocaleString('ru')} so'z</span>
           <span className="tnum hidden sm:inline">{readMin} daqiqa o'qish</span>
         </div>
-        <div className="flex items-center gap-1.5">
-          <Icon d={ICONS.check} className="w-3.5 h-3.5" />
-          <span>{savedLabel} · avtosaqlash</span>
+        <div className={`flex items-center gap-1.5 ${savedAt ? 'text-muted' : 'text-amber-600'}`}>
+          <Icon d={savedAt ? ICONS.check : ICONS.save} className="w-3.5 h-3.5" />
+          <span>{savedLabel}</span>
         </div>
       </div>
     </main>
