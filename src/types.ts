@@ -29,6 +29,7 @@ export interface BookMeta {
   title: string;
   author: string;
   year: number;
+  cover?: string; // base64 data URL — rendered as CoverPage before page 1
 }
 
 // How a paragraph that doesn't fit the remaining space is handled:
