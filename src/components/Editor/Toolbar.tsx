@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import type { Editor } from '@tiptap/react';
+import { useEditorState } from '@tiptap/react';
 import { Icon, ICONS } from '../ui/Icon';
 import { Modal } from '../ui/Modal';
 import { useBookStore } from '../../store/bookStore';
@@ -20,7 +21,31 @@ export function Toolbar({ editor }: { editor: Editor | null }) {
   const [imgOpen, setImgOpen] = useState(false);
   const [imgUrl, setImgUrl] = useState('');
 
+  // Subscribe to editor selection/mark changes so toolbar re-renders on cursor move
+  const editorState = useEditorState({
+    editor,
+    selector: (ctx) => {
+      if (!ctx.editor) return null;
+      const e = ctx.editor;
+      return {
+        style: styleOf(e),
+        bold: e.isActive('bold'),
+        italic: e.isActive('italic'),
+        underline: e.isActive('underline'),
+        alignLeft: e.isActive({ textAlign: 'left' }),
+        alignCenter: e.isActive({ textAlign: 'center' }),
+        alignJustify: e.isActive({ textAlign: 'justify' }),
+        bulletList: e.isActive('bulletList'),
+        orderedList: e.isActive('orderedList'),
+        canUndo: e.can().undo(),
+        canRedo: e.can().redo(),
+      };
+    },
+  });
+
   if (!editor) return <div className="h-12 border-b border-line" />;
+
+  const s = editorState;
 
   const applyStyle = (v: string) => {
     const c = editor.chain().focus();
@@ -47,108 +72,122 @@ export function Toolbar({ editor }: { editor: Editor | null }) {
     reader.readAsDataURL(file);
   };
 
-  const btn = (active: boolean) =>
+  const btn = (active: boolean, disabled = false) =>
     `w-8 h-8 grid place-items-center rounded-lg transition ${
+      disabled ? 'opacity-30 cursor-not-allowed' :
       active ? 'bg-line/70 text-ink' : 'hover:bg-line/60 text-ink'
     }`;
 
   return (
     <>
-    <div className="h-12 shrink-0 border-b border-line flex items-center gap-1 px-3 bg-paper/80 backdrop-blur overflow-x-auto scroll-thin">
-      <select
-        value={styleOf(editor)}
-        onChange={(e) => applyStyle(e.target.value)}
-        className="h-8 px-2.5 rounded-lg bg-panel border border-line text-[12px] font-medium hover:border-muted/40 transition cursor-pointer"
-      >
-        <option value="h1">Sarlavha 1</option>
-        <option value="h2">Sarlavha 2</option>
-        <option value="h3">Sarlavha 3</option>
-        <option value="p">Asosiy matn</option>
-        <option value="quote">Iqtibos</option>
-      </select>
+      {/* Outer wrapper: flex row, undo/redo always on right */}
+      <div className="h-12 shrink-0 border-b border-line flex items-center bg-paper/80 backdrop-blur">
+        {/* Scrollable formatting section */}
+        <div className="flex-1 flex items-center gap-1 px-3 overflow-x-auto scroll-thin min-w-0">
+          <select
+            value={s?.style ?? 'p'}
+            onChange={(e) => applyStyle(e.target.value)}
+            className="h-8 px-2.5 rounded-lg bg-panel border border-line text-[12px] font-medium hover:border-muted/40 transition cursor-pointer shrink-0"
+          >
+            <option value="h1">Sarlavha 1</option>
+            <option value="h2">Sarlavha 2</option>
+            <option value="h3">Sarlavha 3</option>
+            <option value="p">Asosiy matn</option>
+            <option value="quote">Iqtibos</option>
+          </select>
 
-      <div className="w-px h-5 bg-line mx-1.5" />
+          <div className="w-px h-5 bg-line mx-1.5 shrink-0" />
 
-      <select
-        value={typography.bodyFont}
-        onChange={(e) => setTypography({ bodyFont: e.target.value })}
-        className="h-8 px-2.5 rounded-lg bg-panel border border-line text-[12px] hover:border-muted/40 transition cursor-pointer"
-        style={{ fontFamily: typography.bodyFont }}
-      >
-        {BODY_FONTS.map((f) => (
-          <option key={f} value={f} style={{ fontFamily: f }}>
-            {f}
-          </option>
-        ))}
-      </select>
+          <select
+            value={typography.bodyFont}
+            onChange={(e) => setTypography({ bodyFont: e.target.value })}
+            className="h-8 px-2.5 rounded-lg bg-panel border border-line text-[12px] hover:border-muted/40 transition cursor-pointer shrink-0"
+            style={{ fontFamily: typography.bodyFont }}
+          >
+            {BODY_FONTS.map((f) => (
+              <option key={f} value={f} style={{ fontFamily: f }}>
+                {f}
+              </option>
+            ))}
+          </select>
 
-      <div className="flex items-center bg-panel border border-line rounded-lg h-8 ml-1">
-        <button
-          className="w-7 h-full grid place-items-center text-muted hover:text-ink"
-          onClick={() => setTypography({ bodySizePt: Math.max(7, typography.bodySizePt - 0.5) })}
-        >
-          −
-        </button>
-        <span className="text-[12px] tnum w-8 text-center">{typography.bodySizePt}pt</span>
-        <button
-          className="w-7 h-full grid place-items-center text-muted hover:text-ink"
-          onClick={() => setTypography({ bodySizePt: Math.min(24, typography.bodySizePt + 0.5) })}
-        >
-          +
-        </button>
+          <div className="flex items-center bg-panel border border-line rounded-lg h-8 ml-1 shrink-0">
+            <button
+              className="w-7 h-full grid place-items-center text-muted hover:text-ink"
+              onClick={() => setTypography({ bodySizePt: Math.max(7, typography.bodySizePt - 0.5) })}
+            >
+              −
+            </button>
+            <span className="text-[12px] tnum w-8 text-center">{typography.bodySizePt}pt</span>
+            <button
+              className="w-7 h-full grid place-items-center text-muted hover:text-ink"
+              onClick={() => setTypography({ bodySizePt: Math.min(24, typography.bodySizePt + 0.5) })}
+            >
+              +
+            </button>
+          </div>
+
+          <div className="w-px h-5 bg-line mx-1.5 shrink-0" />
+
+          <div className="flex items-center gap-0.5 shrink-0">
+            <button className={btn(s?.bold ?? false)} onClick={() => editor.chain().focus().toggleBold().run()}>
+              <span className="font-bold text-[15px]">B</span>
+            </button>
+            <button className={btn(s?.italic ?? false)} onClick={() => editor.chain().focus().toggleItalic().run()}>
+              <span className="italic font-display text-[15px]">I</span>
+            </button>
+            <button className={btn(s?.underline ?? false)} onClick={() => editor.chain().focus().toggleUnderline().run()}>
+              <span className="underline text-[15px]">U</span>
+            </button>
+          </div>
+
+          <div className="w-px h-5 bg-line mx-1.5 shrink-0" />
+
+          <div className="flex items-center gap-0.5 shrink-0">
+            <button className={btn(s?.alignLeft ?? false)} onClick={() => editor.chain().focus().setTextAlign('left').run()}>
+              <Icon d={ICONS.alignLeft} />
+            </button>
+            <button className={btn(s?.alignCenter ?? false)} onClick={() => editor.chain().focus().setTextAlign('center').run()}>
+              <Icon d={ICONS.alignCenter} />
+            </button>
+            <button className={btn(s?.alignJustify ?? false)} onClick={() => editor.chain().focus().setTextAlign('justify').run()}>
+              <Icon d={ICONS.alignJustify} />
+            </button>
+          </div>
+
+          <div className="w-px h-5 bg-line mx-1.5 shrink-0" />
+
+          <div className="flex items-center gap-0.5 shrink-0">
+            <button className={btn(s?.bulletList ?? false)} onClick={() => editor.chain().focus().toggleBulletList().run()}>
+              <Icon d={ICONS.list} />
+            </button>
+            <button className={btn(s?.orderedList ?? false)} onClick={() => editor.chain().focus().toggleOrderedList().run()}>
+              <Icon d={ICONS.listOrdered} />
+            </button>
+            <button className={btn(false)} onClick={() => setImgOpen(true)} title="Rasm qo'shish">
+              <Icon d={ICONS.image} />
+            </button>
+          </div>
+        </div>
+
+        {/* Undo / Redo — always visible, separated by a border */}
+        <div className="flex items-center gap-0.5 px-2 border-l border-line shrink-0">
+          <button
+            className={btn(false, !s?.canUndo)}
+            title="Bekor"
+            onClick={() => editor.chain().focus().undo().run()}
+          >
+            <Icon d={ICONS.undo} />
+          </button>
+          <button
+            className={btn(false, !s?.canRedo)}
+            title="Qaytar"
+            onClick={() => editor.chain().focus().redo().run()}
+          >
+            <Icon d={ICONS.redo} />
+          </button>
+        </div>
       </div>
-
-      <div className="w-px h-5 bg-line mx-1.5" />
-
-      <div className="flex items-center gap-0.5">
-        <button className={btn(editor.isActive('bold'))} onClick={() => editor.chain().focus().toggleBold().run()}>
-          <span className="font-bold text-[15px]">B</span>
-        </button>
-        <button className={btn(editor.isActive('italic'))} onClick={() => editor.chain().focus().toggleItalic().run()}>
-          <span className="italic font-display text-[15px]">I</span>
-        </button>
-        <button className={btn(editor.isActive('underline'))} onClick={() => editor.chain().focus().toggleUnderline().run()}>
-          <span className="underline text-[15px]">U</span>
-        </button>
-      </div>
-
-      <div className="w-px h-5 bg-line mx-1.5" />
-
-      <div className="flex items-center gap-0.5">
-        <button className={btn(editor.isActive({ textAlign: 'left' }))} onClick={() => editor.chain().focus().setTextAlign('left').run()}>
-          <Icon d={ICONS.alignLeft} />
-        </button>
-        <button className={btn(editor.isActive({ textAlign: 'center' }))} onClick={() => editor.chain().focus().setTextAlign('center').run()}>
-          <Icon d={ICONS.alignCenter} />
-        </button>
-        <button className={btn(editor.isActive({ textAlign: 'justify' }))} onClick={() => editor.chain().focus().setTextAlign('justify').run()}>
-          <Icon d={ICONS.alignJustify} />
-        </button>
-      </div>
-
-      <div className="w-px h-5 bg-line mx-1.5" />
-
-      <div className="flex items-center gap-0.5">
-        <button className={btn(editor.isActive('bulletList'))} onClick={() => editor.chain().focus().toggleBulletList().run()}>
-          <Icon d={ICONS.list} />
-        </button>
-        <button className={btn(editor.isActive('orderedList'))} onClick={() => editor.chain().focus().toggleOrderedList().run()}>
-          <Icon d={ICONS.listOrdered} />
-        </button>
-        <button className={btn(false)} onClick={() => setImgOpen(true)} title="Rasm qo'shish">
-          <Icon d={ICONS.image} />
-        </button>
-      </div>
-
-      <div className="ml-auto flex items-center gap-1 text-muted pl-2">
-        <button className={btn(false)} title="Bekor" onClick={() => editor.chain().focus().undo().run()}>
-          <Icon d={ICONS.undo} />
-        </button>
-        <button className={btn(false)} title="Qaytar" onClick={() => editor.chain().focus().redo().run()}>
-          <Icon d={ICONS.redo} />
-        </button>
-      </div>
-    </div>
 
       {imgOpen && (
         <Modal title="Rasm qo'shish" onClose={() => setImgOpen(false)}>
