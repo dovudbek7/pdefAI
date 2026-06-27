@@ -126,8 +126,11 @@ export default function Home() {
         <p className="text-[12px] text-muted">© 2026 Muslihun</p>
         <button
           onClick={() => setContactOpen(true)}
-          className="h-7 px-3 rounded-lg text-[12px] font-medium border border-line hover:bg-line/60 transition text-ink"
+          className="h-7 px-3.5 rounded-full text-[12px] font-medium bg-ink text-paper hover:bg-ink/80 transition shadow-sm flex items-center gap-1.5"
         >
+          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+          </svg>
           Murojat qilish
         </button>
       </footer>
