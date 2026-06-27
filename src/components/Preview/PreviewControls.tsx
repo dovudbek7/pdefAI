@@ -4,7 +4,7 @@ import { FORMATS } from '../../lib/pageFormats';
 import { Icon, ICONS } from '../ui/Icon';
 import { Modal } from '../ui/Modal';
 import { BookSettings } from './BookSettings';
-import type { PageFormatId } from '../../types';
+
 
 export function PreviewControls() {
   const format = useBookStore((s) => s.format);

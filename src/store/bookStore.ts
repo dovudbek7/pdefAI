@@ -5,7 +5,6 @@ import type {
   NumberSettings,
   PageBorder,
   PageFormat,
-  PageFormatId,
   Typography,
   ViewMode,
 } from '../types';
