@@ -159,6 +159,32 @@ export function BookSettings({ onClose }: { onClose: () => void }) {
           )}
         </div>
 
+        {/* kolontitul */}
+        <div className="space-y-2 border-t border-line pt-4">
+          <label className="flex items-center gap-2.5 text-[13px] cursor-pointer">
+            <input
+              type="checkbox"
+              checked={numbering.kolontitulEnabled}
+              onChange={(e) => setNumbering({ kolontitulEnabled: e.target.checked })}
+              className="accent-accent w-4 h-4"
+            />
+            <span className={label}>Kolontitul (sarlavha satri)</span>
+          </label>
+          {numbering.kolontitulEnabled && (
+            <div className="space-y-1 pt-1">
+              <span className="text-[11px] text-muted">Matn (bo'sh = bobdan avtomatik)</span>
+              <input
+                type="text"
+                className={field}
+                placeholder="Masalan: mening kitobim"
+                value={numbering.kolontitulText}
+                onChange={(e) => setNumbering({ kolontitulText: e.target.value })}
+              />
+              <p className="text-[10px] text-muted/70">Har bir sahifaning yuqorisida ko'rsatiladi</p>
+            </div>
+          )}
+        </div>
+
         <div className="flex justify-end">
           <button
             onClick={onClose}

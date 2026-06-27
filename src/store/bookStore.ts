@@ -62,7 +62,7 @@ function defaultDoc(title = 'Yangi kitob'): BookDoc {
     meta: { title, author: '', year: new Date().getFullYear() },
     format: FORMATS.a5,
     margins: { top: 18, bottom: 18, inner: 20, outer: 16 },
-    numbering: { enabled: true, startAtPage: 1, startFrom: 1, position: 'bottom-center', style: 'arabic' },
+    numbering: { enabled: true, startAtPage: 1, startFrom: 1, position: 'bottom-center', style: 'arabic', kolontitulEnabled: true, kolontitulText: '' },
     typography: {
       bodyFont: 'Spectral',
       bodySizePt: 11,

@@ -23,6 +23,9 @@ export interface NumberSettings {
   startFrom: number; // the number shown on that first numbered page
   position: NumberPosition;
   style: NumberStyle;
+  // Running header (kolontitul) settings
+  kolontitulEnabled: boolean; // show running head line above body
+  kolontitulText: string; // empty = auto from chapter title; set = custom override
 }
 
 export interface BookMeta {

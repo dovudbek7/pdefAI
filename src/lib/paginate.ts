@@ -162,21 +162,24 @@ export function paginate(input: PaginateInput): PaginateResult {
 
   document.body.removeChild(host);
 
-  // Running head = title of the chapter active on each page (last h1/h2 seen).
+  // Running head = custom override or auto chapter title
   const headPerPage: string[] = [];
+  const kolontitulEnabled = numbering.kolontitulEnabled !== false; // default true for old projects
+  const useCustomKolontitul = kolontitulEnabled && numbering.kolontitulText?.trim();
   let lastHead = bookTitle;
   for (let p = 0; p < pages.length; p++) {
     const headingOnPage = toc
       .filter((t) => t.pageIndex === p && t.level <= 2)
       .pop();
     if (headingOnPage) lastHead = headingOnPage.text;
-    headPerPage[p] = lastHead;
+    headPerPage[p] = useCustomKolontitul ? numbering.kolontitulText.trim() : lastHead;
   }
 
   const rendered: RenderedPage[] = pages.map((els, i) => ({
     index: i,
     html: els.map((e) => e.outerHTML).join(''),
-    runningHead: headPerPage[i] ?? bookTitle,
+    // Empty string when kolontitul disabled → Page.tsx hides the head line
+    runningHead: kolontitulEnabled ? (headPerPage[i] ?? bookTitle) : '',
     pageLabel: pageLabelFor(i, numbering),
   }));
 
