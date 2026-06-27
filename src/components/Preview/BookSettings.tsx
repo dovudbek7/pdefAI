@@ -2,6 +2,7 @@ import { useRef } from 'react';
 import { useBookStore } from '../../store/bookStore';
 import { Modal } from '../ui/Modal';
 import { Icon, ICONS } from '../ui/Icon';
+import { BORDER_DEFS, NUM_BORDER_DEFS } from '../../lib/pageBorders';
 import type { NumberPosition, NumberStyle } from '../../types';
 
 /** Visual book layout settings — cover, margins, page numbering. */
@@ -12,6 +13,8 @@ export function BookSettings({ onClose }: { onClose: () => void }) {
   const setMargins = useBookStore((s) => s.setMargins);
   const numbering = useBookStore((s) => s.numbering);
   const setNumbering = useBookStore((s) => s.setNumbering);
+  const border = useBookStore((s) => s.border);
+  const setBorder = useBookStore((s) => s.setBorder);
 
   const fileRef = useRef<HTMLInputElement>(null);
 
@@ -28,7 +31,7 @@ export function BookSettings({ onClose }: { onClose: () => void }) {
   const label = 'text-[11px] uppercase tracking-[0.12em] text-muted font-medium';
 
   return (
-    <Modal title="Kitob sozlamalari" onClose={onClose} width={440}>
+    <Modal title="Kitob sozlamalari" onClose={onClose} width={480}>
       <div className="space-y-5">
 
         {/* Cover image */}
@@ -94,6 +97,73 @@ export function BookSettings({ onClose }: { onClose: () => void }) {
             ))}
           </div>
           <p className="text-[11px] text-muted">Ich = muqovaga yaqin (juft/toq sahifa mos qochadi).</p>
+        </div>
+
+        {/* page border */}
+        <div className="space-y-2 border-t border-line pt-4">
+          <span className={label}>Sahifa ramkasi</span>
+          <div className="grid grid-cols-3 gap-1.5 max-h-40 overflow-y-auto scroll-thin pr-1">
+            {BORDER_DEFS.map((bd) => (
+              <button
+                key={bd.id}
+                onClick={() => setBorder({ type: bd.id })}
+                className={`h-8 px-2 rounded-lg text-[11px] border transition truncate ${
+                  border.type === bd.id
+                    ? 'border-accent bg-accent/10 text-accent font-medium'
+                    : 'border-line hover:bg-line/40'
+                }`}
+              >
+                {bd.label}
+              </button>
+            ))}
+          </div>
+          {border.type !== 'none' && (
+            <div className="flex items-center gap-3 pt-1">
+              <label className="flex items-center gap-2 text-[11px] text-muted flex-1">
+                Rang:
+                <input
+                  type="color"
+                  value={border.color}
+                  onChange={(e) => setBorder({ color: e.target.value })}
+                  className="w-8 h-7 rounded border border-line cursor-pointer"
+                />
+                <span className="tnum">{border.color}</span>
+              </label>
+            </div>
+          )}
+        </div>
+
+        {/* page number decorative border */}
+        <div className="space-y-2 border-t border-line pt-4">
+          <span className={label}>Sahifa raqami bezagi</span>
+          <div className="grid grid-cols-2 gap-1.5">
+            {NUM_BORDER_DEFS.map((nb) => (
+              <button
+                key={nb.id}
+                onClick={() => setBorder({ numBorderType: nb.id })}
+                className={`h-8 px-2 rounded-lg text-[11px] border transition truncate ${
+                  border.numBorderType === nb.id
+                    ? 'border-accent bg-accent/10 text-accent font-medium'
+                    : 'border-line hover:bg-line/40'
+                }`}
+              >
+                {nb.label}
+              </button>
+            ))}
+          </div>
+          {border.numBorderType !== 'none' && (
+            <div className="flex items-center gap-3 pt-1">
+              <label className="flex items-center gap-2 text-[11px] text-muted">
+                Rang:
+                <input
+                  type="color"
+                  value={border.numBorderColor}
+                  onChange={(e) => setBorder({ numBorderColor: e.target.value })}
+                  className="w-8 h-7 rounded border border-line cursor-pointer"
+                />
+              </label>
+            </div>
+          )}
         </div>
 
         {/* numbering */}

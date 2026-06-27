@@ -1,6 +1,8 @@
 import type { RenderedPage } from '../../types';
 import { mmToPx, ptToPx } from '../../lib/pageFormats';
+import { wrapPageLabel } from '../../lib/pageBorders';
 import { useBookStore } from '../../store/bookStore';
+import { PageBorderOverlay } from './PageBorderOverlay';
 
 interface PageProps {
   page: RenderedPage;
@@ -16,6 +18,7 @@ export function Page({ page, delay = 0 }: PageProps) {
   const margins = useBookStore((s) => s.margins);
   const typography = useBookStore((s) => s.typography);
   const numbering = useBookStore((s) => s.numbering);
+  const border = useBookStore((s) => s.border);
 
   const w = mmToPx(format.widthMm);
   const h = mmToPx(format.heightMm);
@@ -33,6 +36,15 @@ export function Page({ page, delay = 0 }: PageProps) {
         ? 'right'
         : 'left';
 
+  const numBorderType = border?.numBorderType ?? 'none';
+  const numBorderColor = border?.numBorderColor ?? (border?.color ?? '#1a1a1a');
+
+  const pageLabel = page.pageLabel
+    ? (numBorderType !== 'none'
+        ? wrapPageLabel(page.pageLabel, numBorderType, numBorderColor)
+        : page.pageLabel)
+    : null;
+
   return (
     <div
       className="fade-up book-page bg-[#fdfbf6] relative shrink-0"
@@ -44,6 +56,14 @@ export function Page({ page, delay = 0 }: PageProps) {
         animationDelay: `${delay}s`,
       }}
     >
+      {/* Page border overlay */}
+      <PageBorderOverlay
+        type={border?.type ?? 'none'}
+        color={border?.color ?? '#1a1a1a'}
+        width={w}
+        height={h}
+      />
+
       <div
         className="absolute inset-0 flex flex-col"
         style={{
@@ -65,13 +85,15 @@ export function Page({ page, delay = 0 }: PageProps) {
             </span>
             <span>{isOdd ? page.pageLabel : ''}</span>
           </div>
-        ) : (
+        ) : page.runningHead ? (
           <div
             className="text-center text-muted/70 font-book italic uppercase tracking-[0.18em] whitespace-nowrap overflow-hidden text-ellipsis"
             style={{ fontSize: ptToPx(7.5), marginBottom: mmToPx(5) }}
           >
             {page.runningHead}
           </div>
+        ) : (
+          <div style={{ marginBottom: mmToPx(5) }} />
         )}
 
         {/* body */}
@@ -89,7 +111,7 @@ export function Page({ page, delay = 0 }: PageProps) {
         />
 
         {/* page number (bottom) */}
-        {numPos !== 'top-outer' && page.pageLabel ? (
+        {numPos !== 'top-outer' && pageLabel ? (
           <div
             className="font-book tnum text-muted"
             style={{
@@ -97,9 +119,8 @@ export function Page({ page, delay = 0 }: PageProps) {
               marginTop: mmToPx(3),
               textAlign: numAlign as 'center' | 'left' | 'right',
             }}
-          >
-            {page.pageLabel}
-          </div>
+            dangerouslySetInnerHTML={{ __html: pageLabel }}
+          />
         ) : null}
       </div>
     </div>

@@ -3,6 +3,7 @@ import type {
   BookMeta,
   Margins,
   NumberSettings,
+  PageBorder,
   PageFormat,
   Typography,
   ViewMode,
@@ -17,6 +18,7 @@ export interface BookDoc {
   numbering: NumberSettings;
   typography: Typography;
   content: string;
+  border: PageBorder;
 }
 
 export interface Project extends BookDoc {
@@ -42,6 +44,7 @@ interface BookState extends BookDoc {
   setNumbering: (n: Partial<NumberSettings>) => void;
   setTypography: (t: Partial<Typography>) => void;
   setContent: (html: string) => void;
+  setBorder: (b: Partial<PageBorder>) => void;
 
   setViewMode: (v: ViewMode) => void;
   cycleViewMode: () => void;
@@ -72,8 +75,11 @@ function defaultDoc(title = 'Yangi kitob'): BookDoc {
       pageBreak: 'fill',
     },
     content: '<h1>Yangi bob</h1><p></p>',
+    border: { type: 'none', color: '#1a1a1a', numBorderType: 'none', numBorderColor: '#1a1a1a' },
   };
 }
+
+const DEFAULT_BORDER: PageBorder = { type: 'none', color: '#1a1a1a', numBorderType: 'none', numBorderColor: '#1a1a1a' };
 
 function docFields(p: Project): BookDoc {
   return {
@@ -83,6 +89,7 @@ function docFields(p: Project): BookDoc {
     numbering: p.numbering,
     typography: p.typography,
     content: p.content,
+    border: (p as Project & { border?: PageBorder }).border ?? DEFAULT_BORDER,
   };
 }
 
@@ -101,6 +108,7 @@ function scheduleSave(getState: () => BookState) {
       numbering: s.numbering,
       typography: s.typography,
       content: s.content,
+      border: s.border,
     };
     apiFetch(`/api/projects/${s.activeId}/`, {
       method: 'PATCH',
@@ -163,6 +171,7 @@ export const useBookStore = create<BookState>()((set, get) => ({
       numbering: s.numbering,
       typography: s.typography,
       content: s.content,
+      border: s.border,
     };
     apiFetch(`/api/projects/${s.activeId}/`, {
       method: 'PATCH',
@@ -170,6 +179,11 @@ export const useBookStore = create<BookState>()((set, get) => ({
     }).then((res) => {
       if (res.ok) useBookStore.setState({ savedAt: Date.now() });
     }).catch(() => {});
+  },
+
+  setBorder: (b) => {
+    set((s) => ({ border: { ...s.border, ...b } }));
+    scheduleSave(get);
   },
 
   setViewMode: (v) => set({ viewMode: v }),

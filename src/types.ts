@@ -49,6 +49,13 @@ export interface Typography {
   pageBreak: PageBreakMode;
 }
 
+export interface PageBorder {
+  type: string;       // border pattern id, 'none' = disabled
+  color: string;      // hex color, e.g. '#1a1a1a'
+  numBorderType: string; // decorative frame around page number, 'none' = plain
+  numBorderColor: string;
+}
+
 export type ViewMode = 'split' | 'editor' | 'preview';
 
 // One laid-out page produced by the paginator
