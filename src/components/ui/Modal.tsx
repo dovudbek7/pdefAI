@@ -32,7 +32,7 @@ export function Modal({ title, onClose, children, width = 380 }: ModalProps) {
             <Icon d={ICONS.x} />
           </button>
         </div>
-        <div className="p-5">{children}</div>
+        <div className="p-5 overflow-y-auto scroll-thin" style={{ maxHeight: 'calc(85vh - 64px)' }}>{children}</div>
       </div>
     </div>
   );

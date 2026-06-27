@@ -13,22 +13,20 @@ export function PreviewControls() {
   const setZoom = useBookStore((s) => s.setZoom);
   const spread = useBookStore((s) => s.spread);
   const toggleSpread = useBookStore((s) => s.toggleSpread);
-  const pageBreak = useBookStore((s) => s.typography.pageBreak);
-  const setTypography = useBookStore((s) => s.setTypography);
 
   const [customOpen, setCustomOpen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [cw, setCw] = useState(format.widthMm);
   const [ch, setCh] = useState(format.heightMm);
 
-  const pick = (id: PageFormatId) => {
+  const handleFormatChange = (id: string) => {
     if (id === 'custom') {
       setCw(format.widthMm);
       setCh(format.heightMm);
       setCustomOpen(true);
       return;
     }
-    setFormat(FORMATS[id]);
+    setFormat(FORMATS[id as PageFormatId]);
   };
 
   const applyCustom = () => {
@@ -38,60 +36,60 @@ export function PreviewControls() {
     }
   };
 
-  const tab = (active: boolean) =>
-    `px-2.5 py-1 rounded-md text-[11px] font-medium transition ${
-      active ? 'bg-ink text-paper' : 'text-muted hover:text-ink'
-    }`;
-
   return (
     <>
-    <div className="h-12 shrink-0 flex items-center justify-between gap-2 px-3 sm:px-4 border-b border-line bg-panel/60 backdrop-blur overflow-x-auto scroll-thin">
-      <div className="flex items-center gap-2">
-        <span className="text-[10px] uppercase tracking-[0.2em] text-muted font-medium hidden sm:inline">
-          Format
-        </span>
-        <div className="flex items-center bg-panel border border-line rounded-lg p-0.5">
-          <button className={tab(format.id === 'a5')} onClick={() => pick('a5')}>A5</button>
-          <button className={tab(format.id === 'a4')} onClick={() => pick('a4')}>A4</button>
-          <button className={tab(format.id === 'b5')} onClick={() => pick('b5')}>B5</button>
-          <button className={tab(format.id === 'custom')} onClick={() => pick('custom')}>Maxsus</button>
+      <div className="h-12 shrink-0 flex items-center justify-between gap-2 px-3 sm:px-4 border-b border-line bg-panel/60 backdrop-blur">
+        {/* Format select */}
+        <div className="flex items-center gap-2">
+          <span className="text-[10px] uppercase tracking-[0.2em] text-muted font-medium hidden sm:inline shrink-0">
+            Format
+          </span>
+          <select
+            value={format.id}
+            onChange={(e) => handleFormatChange(e.target.value)}
+            className="h-8 px-2.5 rounded-lg bg-panel border border-line text-[12px] font-medium cursor-pointer hover:border-muted/40 transition"
+          >
+            <option value="a5">A5</option>
+            <option value="a4">A4</option>
+            <option value="b5">B5</option>
+            <option value="custom">Maxsus</option>
+          </select>
+        </div>
+
+        {/* Right controls */}
+        <div className="flex items-center gap-1 text-muted">
+          <button
+            className="w-7 h-7 grid place-items-center rounded-md hover:bg-line/60 transition"
+            onClick={() => setZoom(zoom - 0.1)}
+            title="Kichiklashtirish"
+          >
+            <Icon d={ICONS.minus} />
+          </button>
+          <span className="text-[11px] tnum w-9 text-center">{Math.round(zoom * 100)}%</span>
+          <button
+            className="w-7 h-7 grid place-items-center rounded-md hover:bg-line/60 transition"
+            onClick={() => setZoom(zoom + 0.1)}
+            title="Kattalashtirish"
+          >
+            <Icon d={ICONS.plus} />
+          </button>
+          <div className="w-px h-5 bg-line mx-1" />
+          <button
+            className={`w-7 h-7 grid place-items-center rounded-md transition ${spread ? 'bg-line/70 text-ink' : 'hover:bg-line/60'}`}
+            title="Ikki sahifa"
+            onClick={toggleSpread}
+          >
+            <Icon d={ICONS.spread} />
+          </button>
+          <button
+            className="w-7 h-7 grid place-items-center rounded-md hover:bg-line/60 transition"
+            title="Kitob sozlamalari"
+            onClick={() => setSettingsOpen(true)}
+          >
+            <Icon d={ICONS.settings} className="w-4 h-4" />
+          </button>
         </div>
       </div>
-
-      <div className="flex items-center gap-2 text-muted">
-        <button
-          onClick={() => setTypography({ pageBreak: pageBreak === 'fill' ? 'paragraph' : 'fill' })}
-          title="Sahifa bo'linishi: so'zlab to'ldirish yoki butun abzasni ko'chirish"
-          className="h-7 px-2.5 rounded-md border border-line bg-panel hover:bg-line/50 transition flex items-center gap-1.5 text-[11px] font-medium text-ink"
-        >
-          <Icon d={pageBreak === 'fill' ? ICONS.alignJustify : ICONS.bookOnly} className="w-3.5 h-3.5" />
-          {pageBreak === 'fill' ? 'So`zlab' : 'Butun abzas'}
-        </button>
-        <div className="w-px h-5 bg-line mx-1" />
-        <button className="w-7 h-7 grid place-items-center rounded-md hover:bg-line/60 transition" onClick={() => setZoom(zoom - 0.1)}>
-          <Icon d={ICONS.minus} />
-        </button>
-        <span className="text-[11px] tnum w-9 text-center">{Math.round(zoom * 100)}%</span>
-        <button className="w-7 h-7 grid place-items-center rounded-md hover:bg-line/60 transition" onClick={() => setZoom(zoom + 0.1)}>
-          <Icon d={ICONS.plus} />
-        </button>
-        <div className="w-px h-5 bg-line mx-1" />
-        <button
-          className={`w-7 h-7 grid place-items-center rounded-md transition ${spread ? 'bg-line/70 text-ink' : 'hover:bg-line/60'}`}
-          title="Ikki sahifa"
-          onClick={toggleSpread}
-        >
-          <Icon d={ICONS.spread} />
-        </button>
-        <button
-          className="w-7 h-7 grid place-items-center rounded-md hover:bg-line/60 transition"
-          title="Kitob sozlamalari (chekka, sahifa raqami)"
-          onClick={() => setSettingsOpen(true)}
-        >
-          <Icon d={ICONS.settings} className="w-4 h-4" />
-        </button>
-      </div>
-    </div>
 
       {settingsOpen && <BookSettings onClose={() => setSettingsOpen(false)} />}
 

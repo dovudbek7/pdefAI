@@ -2,8 +2,25 @@ import { useRef } from 'react';
 import { useBookStore } from '../../store/bookStore';
 import { Modal } from '../ui/Modal';
 import { Icon, ICONS } from '../ui/Icon';
-import { BORDER_DEFS, NUM_BORDER_DEFS } from '../../lib/pageBorders';
+import { BORDER_DEFS, NUM_BORDER_DEFS, renderBorderSVG } from '../../lib/pageBorders';
 import type { NumberPosition, NumberStyle } from '../../types';
+
+// Full-resolution A5 page dimensions for the thumbnail viewBox
+const PREVIEW_W = 559;
+const PREVIEW_H = 794;
+
+function BorderThumb({ type, color, selected }: { type: string; color: string; selected: boolean }) {
+  const inner = type === 'none' ? '' : renderBorderSVG(type, PREVIEW_W, PREVIEW_H, color || '#1a1a1a');
+  return (
+    <svg
+      viewBox={`0 0 ${PREVIEW_W} ${PREVIEW_H}`}
+      width="100%"
+      style={{ display: 'block', background: '#fdfbf6', borderRadius: 4 }}
+      className={selected ? 'ring-2 ring-accent' : ''}
+      dangerouslySetInnerHTML={{ __html: inner || `<rect x="0" y="0" width="${PREVIEW_W}" height="${PREVIEW_H}" fill="#f5f0e8"/>` }}
+    />
+  );
+}
 
 /** Visual book layout settings — cover, margins, page numbering. */
 export function BookSettings({ onClose }: { onClose: () => void }) {
@@ -15,6 +32,8 @@ export function BookSettings({ onClose }: { onClose: () => void }) {
   const setNumbering = useBookStore((s) => s.setNumbering);
   const border = useBookStore((s) => s.border);
   const setBorder = useBookStore((s) => s.setBorder);
+  const pageBreak = useBookStore((s) => s.typography.pageBreak);
+  const setTypography = useBookStore((s) => s.setTypography);
 
   const fileRef = useRef<HTMLInputElement>(null);
 
@@ -28,15 +47,15 @@ export function BookSettings({ onClose }: { onClose: () => void }) {
   };
 
   const field = 'h-9 px-2.5 rounded-lg bg-paper border border-line text-[13px] w-full';
-  const label = 'text-[11px] uppercase tracking-[0.12em] text-muted font-medium';
+  const sectionLabel = 'text-[11px] uppercase tracking-[0.12em] text-muted font-medium';
 
   return (
-    <Modal title="Kitob sozlamalari" onClose={onClose} width={480}>
+    <Modal title="Kitob sozlamalari" onClose={onClose} width={520}>
       <div className="space-y-5">
 
         {/* Cover image */}
         <div className="space-y-2">
-          <span className={label}>Muqova rasmi (ixtiyoriy)</span>
+          <span className={sectionLabel}>Muqova rasmi (ixtiyoriy)</span>
           {meta.cover ? (
             <div className="flex items-start gap-3">
               <img
@@ -68,19 +87,13 @@ export function BookSettings({ onClose }: { onClose: () => void }) {
               Muqova rasmi yuklash
             </button>
           )}
-          <input
-            ref={fileRef}
-            type="file"
-            accept="image/*"
-            className="hidden"
-            onChange={handleCoverFile}
-          />
+          <input ref={fileRef} type="file" accept="image/*" className="hidden" onChange={handleCoverFile} />
           <p className="text-[11px] text-muted">Ko'rish rejimida birinchi sahifa sifatida ko'rsatiladi.</p>
         </div>
 
         {/* margins */}
         <div className="space-y-2 border-t border-line pt-4">
-          <span className={label}>Chekkalar (mm)</span>
+          <span className={sectionLabel}>Chekkalar (mm)</span>
           <div className="grid grid-cols-4 gap-2">
             {(['top', 'bottom', 'inner', 'outer'] as const).map((k) => (
               <div key={k} className="space-y-1">
@@ -99,74 +112,84 @@ export function BookSettings({ onClose }: { onClose: () => void }) {
           <p className="text-[11px] text-muted">Ich = muqovaga yaqin (juft/toq sahifa mos qochadi).</p>
         </div>
 
-        {/* page border */}
+        {/* Page border — visual grid thumbnails */}
         <div className="space-y-2 border-t border-line pt-4">
-          <span className={label}>Sahifa ramkasi</span>
-          <div className="grid grid-cols-3 gap-1.5 max-h-40 overflow-y-auto scroll-thin pr-1">
+          <span className={sectionLabel}>Sahifa ramkasi</span>
+          <div className="grid grid-cols-4 gap-2">
             {BORDER_DEFS.map((bd) => (
               <button
                 key={bd.id}
                 onClick={() => setBorder({ type: bd.id })}
-                className={`h-8 px-2 rounded-lg text-[11px] border transition truncate ${
+                title={bd.label}
+                className={`flex flex-col items-center gap-1 p-1.5 rounded-lg border transition ${
                   border.type === bd.id
-                    ? 'border-accent bg-accent/10 text-accent font-medium'
+                    ? 'border-accent bg-accent/8'
                     : 'border-line hover:bg-line/40'
                 }`}
               >
-                {bd.label}
+                <div className="w-full aspect-[3/4]">
+                  <BorderThumb type={bd.id} color={border.color} selected={false} />
+                </div>
+                <span className={`text-[9px] leading-tight text-center truncate w-full ${border.type === bd.id ? 'text-accent font-medium' : 'text-muted'}`}>
+                  {bd.label}
+                </span>
               </button>
             ))}
           </div>
           {border.type !== 'none' && (
-            <div className="flex items-center gap-3 pt-1">
-              <label className="flex items-center gap-2 text-[11px] text-muted flex-1">
-                Rang:
-                <input
-                  type="color"
-                  value={border.color}
-                  onChange={(e) => setBorder({ color: e.target.value })}
-                  className="w-8 h-7 rounded border border-line cursor-pointer"
-                />
-                <span className="tnum">{border.color}</span>
-              </label>
+            <div className="flex items-center gap-2 pt-1">
+              <span className="text-[11px] text-muted">Rang:</span>
+              <input
+                type="color"
+                value={border.color}
+                onChange={(e) => setBorder({ color: e.target.value })}
+                className="w-8 h-7 rounded border border-line cursor-pointer"
+              />
+              <span className="tnum text-[11px] text-muted">{border.color}</span>
             </div>
           )}
         </div>
 
-        {/* page number decorative border */}
+        {/* Page number decorative border — select */}
         <div className="space-y-2 border-t border-line pt-4">
-          <span className={label}>Sahifa raqami bezagi</span>
-          <div className="grid grid-cols-2 gap-1.5">
-            {NUM_BORDER_DEFS.map((nb) => (
-              <button
-                key={nb.id}
-                onClick={() => setBorder({ numBorderType: nb.id })}
-                className={`h-8 px-2 rounded-lg text-[11px] border transition truncate ${
-                  border.numBorderType === nb.id
-                    ? 'border-accent bg-accent/10 text-accent font-medium'
-                    : 'border-line hover:bg-line/40'
-                }`}
-              >
-                {nb.label}
-              </button>
-            ))}
+          <span className={sectionLabel}>Sahifa raqami bezagi</span>
+          <div className="flex items-center gap-3">
+            <select
+              value={border.numBorderType}
+              onChange={(e) => setBorder({ numBorderType: e.target.value })}
+              className={field}
+            >
+              {NUM_BORDER_DEFS.map((nb) => (
+                <option key={nb.id} value={nb.id}>{nb.label}</option>
+              ))}
+            </select>
+            {border.numBorderType !== 'none' && (
+              <input
+                type="color"
+                value={border.numBorderColor}
+                onChange={(e) => setBorder({ numBorderColor: e.target.value })}
+                className="w-9 h-9 rounded border border-line cursor-pointer shrink-0"
+                title="Rang"
+              />
+            )}
           </div>
-          {border.numBorderType !== 'none' && (
-            <div className="flex items-center gap-3 pt-1">
-              <label className="flex items-center gap-2 text-[11px] text-muted">
-                Rang:
-                <input
-                  type="color"
-                  value={border.numBorderColor}
-                  onChange={(e) => setBorder({ numBorderColor: e.target.value })}
-                  className="w-8 h-7 rounded border border-line cursor-pointer"
-                />
-              </label>
-            </div>
-          )}
         </div>
 
-        {/* numbering */}
+        {/* Page break mode (moved from preview toolbar) */}
+        <div className="space-y-2 border-t border-line pt-4">
+          <span className={sectionLabel}>Sahifa bo'linishi</span>
+          <select
+            value={pageBreak}
+            onChange={(e) => setTypography({ pageBreak: e.target.value as 'fill' | 'paragraph' })}
+            className={field}
+          >
+            <option value="fill">So'zlab to'ldirish</option>
+            <option value="paragraph">Butun abzas ko'chirish</option>
+          </select>
+          <p className="text-[11px] text-muted">Abzas sahifaga sig'masa qanday davom etish.</p>
+        </div>
+
+        {/* Numbering */}
         <div className="space-y-2 border-t border-line pt-4">
           <label className="flex items-center gap-2.5 text-[13px] cursor-pointer">
             <input
@@ -176,7 +199,7 @@ export function BookSettings({ onClose }: { onClose: () => void }) {
               className="accent-accent w-4 h-4"
             />
             <Icon d={ICONS.check} className="w-3.5 h-3.5 text-muted" />
-            <span className={label}>Sahifa raqami</span>
+            <span className={sectionLabel}>Sahifa raqami</span>
           </label>
 
           {numbering.enabled && (
@@ -229,7 +252,7 @@ export function BookSettings({ onClose }: { onClose: () => void }) {
           )}
         </div>
 
-        {/* kolontitul */}
+        {/* Kolontitul */}
         <div className="space-y-2 border-t border-line pt-4">
           <label className="flex items-center gap-2.5 text-[13px] cursor-pointer">
             <input
@@ -238,7 +261,7 @@ export function BookSettings({ onClose }: { onClose: () => void }) {
               onChange={(e) => setNumbering({ kolontitulEnabled: e.target.checked })}
               className="accent-accent w-4 h-4"
             />
-            <span className={label}>Kolontitul (sarlavha satri)</span>
+            <span className={sectionLabel}>Kolontitul (sarlavha satri)</span>
           </label>
           {numbering.kolontitulEnabled && (
             <div className="space-y-1 pt-1">
