@@ -1,5 +1,6 @@
 import { Page } from './Page';
 import { PreviewControls } from './PreviewControls';
+import { CoverPage } from './CoverPage';
 import { useBookStore } from '../../store/bookStore';
 import { MM_PER_INCH, SCREEN_DPI, formatLabel } from '../../lib/pageFormats';
 import type { PaginateResult } from '../../lib/paginate';
@@ -12,6 +13,7 @@ export function BookPreview({ result }: { result: PaginateResult }) {
   const format = useBookStore((s) => s.format);
   const margins = useBookStore((s) => s.margins);
   const numbering = useBookStore((s) => s.numbering);
+  const meta = useBookStore((s) => s.meta);
   const zoom = useBookStore((s) => s.zoom);
   const spread = useBookStore((s) => s.spread);
 
@@ -41,6 +43,14 @@ export function BookPreview({ result }: { result: PaginateResult }) {
           }`}
           style={spread ? { width: dispW * 2 + 12 } : undefined}
         >
+          {/* Cover page — shown as the very first page when a cover image is set */}
+          {meta.cover &&
+            wrap(
+              <CoverPage meta={meta} format={format} margins={margins} scale={scale} />,
+              'cover',
+              'page-cover',
+            )}
+
           {result.pages.map((p, i) =>
             wrap(<Page page={p} delay={Math.min(i * 0.04, 0.4)} />, p.index, `page-${p.index}`),
           )}
@@ -48,7 +58,8 @@ export function BookPreview({ result }: { result: PaginateResult }) {
         </div>
 
         <div className="text-center text-[10px] uppercase tracking-[0.25em] text-muted/70 mt-8">
-          {total} sahifa{numbering.enabled ? ` · raqam ${numbering.startAtPage}-sahifadan` : ''}
+          {meta.cover ? total + 1 : total} sahifa
+          {numbering.enabled ? ` · raqam ${numbering.startAtPage}-sahifadan` : ''}
         </div>
       </div>
 
