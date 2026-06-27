@@ -20,11 +20,15 @@ export default function Editor() {
   const setViewMode = useBookStore((s) => s.setViewMode);
   const cycleViewMode = useBookStore((s) => s.cycleViewMode);
   const loadProject = useBookStore((s) => s.loadProject);
+  const flushSave = useBookStore((s) => s.flushSave);
   const activeId = useBookStore((s) => s.activeId);
 
   const result = usePaginate();
   const [exportOpen, setExportOpen] = useState(false);
   const [railOpen, setRailOpen] = useState(false);
+
+  // Flush debounced save before leaving the editor.
+  useEffect(() => () => { flushSave(); }, [flushSave]);
 
   // Load the requested project; redirect home if it doesn't exist.
   useEffect(() => {
