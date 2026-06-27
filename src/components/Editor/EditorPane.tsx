@@ -1,10 +1,12 @@
-import { useEditor, EditorContent } from '@tiptap/react';
+import { useEditor, EditorContent, ReactNodeViewRenderer } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
 import Placeholder from '@tiptap/extension-placeholder';
 import Image from '@tiptap/extension-image';
 import TextAlign from '@tiptap/extension-text-align';
+import { Extension } from '@tiptap/core';
 import { useEffect, useMemo } from 'react';
 import { Toolbar } from './Toolbar';
+import { ImageNodeView } from './ImageNodeView';
 import { useBookStore } from '../../store/bookStore';
 import { Icon, ICONS } from '../ui/Icon';
 
@@ -13,15 +15,46 @@ function countWords(text: string) {
   return t ? t.split(/\s+/).length : 0;
 }
 
+function fileToBase64(file: File): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result as string);
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+}
+
+// Extension that handles image drop + paste via editorProps
+const ImageDropPaste = Extension.create({
+  name: 'imageDropPaste',
+
+  addProseMirrorPlugins() {
+    return [];
+  },
+});
+
 export function EditorPane() {
   const content = useBookStore((s) => s.content);
   const setContent = useBookStore((s) => s.setContent);
   const savedAt = useBookStore((s) => s.savedAt);
 
+  const CustomImage = Image.extend({
+    addAttributes() {
+      return {
+        ...this.parent?.(),
+        width: { default: null },
+        'data-align': { default: 'left' },
+      };
+    },
+    addNodeView() {
+      return ReactNodeViewRenderer(ImageNodeView);
+    },
+  }).configure({ inline: false, allowBase64: true });
+
   const editor = useEditor({
     extensions: [
       StarterKit,
-      Image,
+      CustomImage,
       TextAlign.configure({ types: ['heading', 'paragraph'] }),
       Placeholder.configure({ placeholder: 'Bu yerda matn yozishda davom etasiz…' }),
     ],
@@ -29,6 +62,42 @@ export function EditorPane() {
     onUpdate: ({ editor }) => setContent(editor.getHTML()),
     editorProps: {
       attributes: { class: 'focus:outline-none' },
+
+      handleDrop(view, event) {
+        const files = event.dataTransfer?.files;
+        if (!files || files.length === 0) return false;
+        const imageFiles = Array.from(files).filter((f) => f.type.startsWith('image/'));
+        if (imageFiles.length === 0) return false;
+        event.preventDefault();
+        imageFiles.forEach(async (file) => {
+          const src = await fileToBase64(file);
+          const { schema } = view.state;
+          const node = schema.nodes.image.create({ src });
+          const tr = view.state.tr.replaceSelectionWith(node);
+          view.dispatch(tr);
+        });
+        return true;
+      },
+
+      handlePaste(_view, event) {
+        const items = event.clipboardData?.items;
+        if (!items) return false;
+        const imageItems = Array.from(items).filter((i) => i.type.startsWith('image/'));
+        if (imageItems.length === 0) return false;
+        event.preventDefault();
+        imageItems.forEach(async (item) => {
+          const file = item.getAsFile();
+          if (!file) return;
+          const src = await fileToBase64(file);
+          const view = editor?.view;
+          if (!view) return;
+          const { schema } = view.state;
+          const node = schema.nodes.image.create({ src });
+          const tr = view.state.tr.replaceSelectionWith(node);
+          view.dispatch(tr);
+        });
+        return true;
+      },
     },
   });
 
