@@ -1,4 +1,4 @@
-const BASE = (import.meta.env.VITE_API_URL as string | undefined) ?? 'http://localhost:8000';
+const BASE = (import.meta.env.VITE_API_URL as string | undefined) ?? 'https://dovudbekmm.pythonanywhere.com';
 
 async function refreshTokens(): Promise<string | null> {
   const refresh = localStorage.getItem('kitob-refresh');
