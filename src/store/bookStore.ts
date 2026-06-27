@@ -214,8 +214,9 @@ export const useBookStore = create<BookState>()((set, get) => ({
   createProject: async (name, formatId) => {
     const title = (name && name.trim()) || 'Yangi kitob';
     const doc = defaultDoc(title);
-    if (formatId && FORMATS[formatId as PageFormatId]) {
-      doc.format = FORMATS[formatId as PageFormatId];
+    type KnownFormat = keyof typeof FORMATS;
+    if (formatId && (formatId as string) in FORMATS) {
+      doc.format = FORMATS[formatId as KnownFormat];
     }
     try {
       const res = await apiFetch('/api/projects/', {

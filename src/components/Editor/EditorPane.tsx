@@ -41,7 +41,6 @@ const CustomImage = Image.extend({
 export function EditorPane() {
   const content = useBookStore((s) => s.content);
   const setContent = useBookStore((s) => s.setContent);
-  const savedAt = useBookStore((s) => s.savedAt);
   const dirty = useBookStore((s) => s.dirty);
   const flushSave = useBookStore((s) => s.flushSave);
 

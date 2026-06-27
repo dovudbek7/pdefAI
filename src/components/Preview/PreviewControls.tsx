@@ -26,7 +26,7 @@ export function PreviewControls() {
       setCustomOpen(true);
       return;
     }
-    setFormat(FORMATS[id as PageFormatId]);
+    setFormat(FORMATS[id as keyof typeof FORMATS]);
   };
 
   const applyCustom = () => {
