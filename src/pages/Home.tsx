@@ -20,6 +20,7 @@ export default function Home() {
   const [newBookName, setNewBookName] = useState('');
   const [newBookFormat, setNewBookFormat] = useState('a5');
   const [creating, setCreating] = useState(false);
+  const [contactOpen, setContactOpen] = useState(false);
 
   useEffect(() => {
     loadProjects();
@@ -116,7 +117,50 @@ export default function Home() {
             ))}
           </div>
         )}
+        {/* Contact footer */}
+        <div className="mt-12 pt-6 border-t border-line flex items-center justify-between gap-4">
+          <p className="text-[12px] text-muted">© 2026 Muslihun — yozuvchi muhiti</p>
+          <button
+            onClick={() => setContactOpen(true)}
+            className="text-[12px] text-muted hover:text-ink transition underline underline-offset-2"
+          >
+            Murojat qilish
+          </button>
+        </div>
       </main>
+
+      {/* Contact modal */}
+      {contactOpen && (
+        <Modal title="Murojat qilish" onClose={() => setContactOpen(false)} width={420}>
+          <div className="space-y-4">
+            <div className="flex items-start gap-3 rounded-xl bg-amber-50 border border-amber-200 px-4 py-3">
+              <span className="text-amber-500 text-lg leading-none mt-0.5">⚠</span>
+              <p className="text-[13px] text-amber-900 leading-relaxed">
+                Dasturda xatolik yoki kamchilik topgan bo'lsangiz, yoxud biror taklif va murojatingiz bo'lsa — quyidagi Telegram bot orqali biz bilan bog'laning. Xabaringiz ko'rib chiqiladi.
+              </p>
+            </div>
+
+            <div className="rounded-xl border border-line bg-paper px-4 py-3 flex items-center justify-between gap-3">
+              <div>
+                <p className="text-[13px] font-medium text-ink">@ContactKaizenBot</p>
+                <p className="text-[11px] text-muted mt-0.5">Telegram orqali murojaat</p>
+              </div>
+              <a
+                href="https://t.me/ContactKaizenBot"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="h-9 px-4 rounded-lg text-[13px] font-medium bg-ink text-paper hover:bg-ink/90 transition shrink-0 flex items-center"
+              >
+                Ochish
+              </a>
+            </div>
+
+            <p className="text-[11px] text-muted text-center">
+              Xabarlaringizga imkon qadar tez javob berishga harakat qilamiz
+            </p>
+          </div>
+        </Modal>
+      )}
 
       {/* New book modal */}
       {newBookOpen && (

@@ -47,15 +47,15 @@ export function ExportDialog({
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center no-print">
       <div className="absolute inset-0 bg-ink/30 backdrop-blur-sm" onClick={onClose} />
-      <div className="relative w-[460px] max-w-[92vw] max-h-[88vh] overflow-y-auto scroll-thin bg-panel rounded-2xl border border-line shadow-2xl">
-        <div className="flex items-center justify-between px-5 py-4 border-b border-line sticky top-0 bg-panel z-10">
+      <div className="relative w-[460px] max-w-[92vw] max-h-[88vh] flex flex-col bg-panel rounded-2xl border border-line shadow-2xl">
+        <div className="flex items-center justify-between px-5 py-4 border-b border-line shrink-0">
           <h3 className="font-display text-lg font-semibold">Eksport</h3>
           <button onClick={onClose} className="w-8 h-8 grid place-items-center rounded-lg hover:bg-line/60 transition text-muted">
             <Icon d={ICONS.x} />
           </button>
         </div>
 
-        <div className="p-5 space-y-5">
+        <div className="flex-1 overflow-y-auto scroll-thin p-5 space-y-5">
           {/* file name */}
           <div className="space-y-1">
             <span className={label}>Fayl nomi</span>
