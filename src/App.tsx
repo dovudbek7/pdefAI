@@ -6,6 +6,7 @@ import Login from './pages/Login';
 import Register from './pages/Register';
 import Home from './pages/Home';
 import Editor from './pages/Editor';
+import Analytics from './pages/Analytics';
 
 function ProtectedRoute({ children }: { children: ReactNode }) {
   const user = useAuthStore((s) => s.currentUser);
@@ -29,6 +30,19 @@ function GuestRoute({ children }: { children: ReactNode }) {
   return <>{children}</>;
 }
 
+function AdminRoute({ children }: { children: ReactNode }) {
+  const user = useAuthStore((s) => s.currentUser);
+  const loading = useAuthStore((s) => s.loading);
+  if (loading) return (
+    <div className="h-screen flex items-center justify-center">
+      <div className="w-8 h-8 border-2 border-line border-t-ink rounded-full animate-spin" />
+    </div>
+  );
+  if (!user) return <Navigate to="/login" replace />;
+  if (!user.is_staff) return <Navigate to="/" replace />;
+  return <>{children}</>;
+}
+
 export default function App() {
   const init = useAuthStore((s) => s.init);
 
@@ -42,6 +56,7 @@ export default function App() {
       <Route path="/register" element={<GuestRoute><Register /></GuestRoute>} />
       <Route path="/" element={<ProtectedRoute><Home /></ProtectedRoute>} />
       <Route path="/editor/:id" element={<ProtectedRoute><Editor /></ProtectedRoute>} />
+      <Route path="/dashboard/analytics" element={<AdminRoute><Analytics /></AdminRoute>} />
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   );
