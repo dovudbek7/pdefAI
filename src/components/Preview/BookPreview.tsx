@@ -1,10 +1,11 @@
+import { useMemo } from 'react';
 import { Page } from './Page';
 import { PreviewControls } from './PreviewControls';
 import { CoverPage } from './CoverPage';
+import { TocPage, splitTocPages } from './TocPage';
 import { useBookStore } from '../../store/bookStore';
 import { MM_PER_INCH, SCREEN_DPI, formatLabel } from '../../lib/pageFormats';
 import type { PaginateResult } from '../../lib/paginate';
-import { TocPage } from './TocPage';
 
 const DISPLAY_PX_PER_MM = 2.0;
 const FULL_PX_PER_MM = SCREEN_DPI / MM_PER_INCH;
@@ -22,13 +23,19 @@ export function BookPreview({ result }: { result: PaginateResult }) {
   const dispW = format.widthMm * pxPerMm;
   const dispH = format.heightMm * pxPerMm;
 
+  // Paginate TOC entries across multiple pages when needed
+  const tocChunks = useMemo(
+    () => splitTocPages(result.toc, format.heightMm, margins.top, margins.bottom),
+    [result.toc, format.heightMm, margins.top, margins.bottom],
+  );
+
   const wrap = (node: React.ReactNode, key: string | number, id?: string) => (
     <div key={key} id={id} style={{ width: dispW, height: dispH }} className="shrink-0 scroll-mt-6">
       <div style={{ transform: `scale(${scale})`, transformOrigin: 'top left' }}>{node}</div>
     </div>
   );
 
-  const total = result.pages.length;
+  const total = result.pages.length + tocChunks.length + (meta.cover ? 1 : 0);
 
   return (
     <section className="flex flex-col h-full bg-[#ece5d8] min-w-0">
@@ -43,7 +50,7 @@ export function BookPreview({ result }: { result: PaginateResult }) {
           }`}
           style={spread ? { width: dispW * 2 + 12 } : undefined}
         >
-          {/* Cover page — shown as the very first page when a cover image is set */}
+          {/* Cover page */}
           {meta.cover &&
             wrap(
               <CoverPage meta={meta} format={format} margins={margins} scale={scale} />,
@@ -51,14 +58,23 @@ export function BookPreview({ result }: { result: PaginateResult }) {
               'page-cover',
             )}
 
+          {/* Content pages */}
           {result.pages.map((p, i) =>
             wrap(<Page page={p} delay={Math.min(i * 0.04, 0.4)} />, p.index, `page-${p.index}`),
           )}
-          {wrap(<TocPage toc={result.toc} />, 'toc')}
+
+          {/* TOC — one page per chunk */}
+          {tocChunks.map((chunk, ci) =>
+            wrap(
+              <TocPage toc={chunk} showTitle={ci === 0} />,
+              `toc-${ci}`,
+              ci === 0 ? 'page-toc' : `page-toc-${ci}`,
+            ),
+          )}
         </div>
 
         <div className="text-center text-[10px] uppercase tracking-[0.25em] text-muted/70 mt-8">
-          {meta.cover ? total + 1 : total} sahifa
+          {total} sahifa
           {numbering.enabled ? ` · raqam ${numbering.startAtPage}-sahifadan` : ''}
         </div>
       </div>

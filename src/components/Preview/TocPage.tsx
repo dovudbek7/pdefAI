@@ -2,8 +2,14 @@ import type { TocEntry } from '../../types';
 import { mmToPx, ptToPx } from '../../lib/pageFormats';
 import { useBookStore } from '../../store/bookStore';
 
-/** Auto-generated table-of-contents page (front matter, unnumbered). */
-export function TocPage({ toc }: { toc: TocEntry[] }) {
+/** Renders one page of the table of contents. */
+export function TocPage({
+  toc,
+  showTitle = true,
+}: {
+  toc: TocEntry[];
+  showTitle?: boolean;
+}) {
   const format = useBookStore((s) => s.format);
   const margins = useBookStore((s) => s.margins);
 
@@ -12,7 +18,7 @@ export function TocPage({ toc }: { toc: TocEntry[] }) {
 
   return (
     <div
-      className="fade-up bg-[#fdfbf6] relative shrink-0"
+      className="fade-up bg-[#fdfbf6] relative shrink-0 overflow-hidden"
       style={{
         width: w,
         height: h,
@@ -20,21 +26,24 @@ export function TocPage({ toc }: { toc: TocEntry[] }) {
       }}
     >
       <div
-        className="absolute inset-0 flex flex-col"
+        className="absolute inset-0 flex flex-col overflow-hidden"
         style={{
-          paddingTop: mmToPx(margins.top + 6),
+          paddingTop: mmToPx(margins.top + (showTitle ? 6 : 2)),
           paddingBottom: mmToPx(margins.bottom),
           paddingLeft: mmToPx(margins.inner),
           paddingRight: mmToPx(margins.outer),
         }}
       >
-        <h2
-          className="font-display font-semibold text-ink"
-          style={{ fontSize: ptToPx(20), marginBottom: mmToPx(8) }}
-        >
-          Mundarija
-        </h2>
-        <div className="flex-1" style={{ fontFamily: "'Spectral', serif" }}>
+        {showTitle && (
+          <h2
+            className="font-display font-semibold text-ink shrink-0"
+            style={{ fontSize: ptToPx(20), marginBottom: mmToPx(8) }}
+          >
+            Mundarija
+          </h2>
+        )}
+
+        <div className="flex-1 overflow-hidden" style={{ fontFamily: "'Spectral', serif" }}>
           {toc.length === 0 ? (
             <p className="text-muted italic" style={{ fontSize: ptToPx(10) }}>
               Sarlavhalar qo'shilsa, mundarija avtomatik shakllanadi.
@@ -65,4 +74,43 @@ export function TocPage({ toc }: { toc: TocEntry[] }) {
       </div>
     </div>
   );
+}
+
+/** Split TOC entries across pages based on approximate entry heights. */
+export function splitTocPages(
+  toc: TocEntry[],
+  formatH: number,
+  marginTop: number,
+  marginBottom: number,
+): TocEntry[][] {
+  const pageH = mmToPx(formatH);
+  const paddingTop = mmToPx(marginTop + 6);
+  const paddingBottom = mmToPx(marginBottom);
+  const titleH = ptToPx(20) * 1.3 + mmToPx(8);
+
+  const entryH = (t: TocEntry) =>
+    ptToPx(t.level === 1 ? 11 : 10) * 1.4 + mmToPx(t.level === 1 ? 3 : 1.8);
+
+  const maxFirst = pageH - paddingTop - paddingBottom - titleH;
+  const maxRest = pageH - mmToPx(marginTop + 2) - paddingBottom;
+
+  const pages: TocEntry[][] = [];
+  let current: TocEntry[] = [];
+  let used = 0;
+  let isFirst = true;
+
+  for (const entry of toc) {
+    const h = entryH(entry);
+    const cap = isFirst ? maxFirst : maxRest;
+    if (used + h > cap && current.length > 0) {
+      pages.push(current);
+      current = [];
+      used = 0;
+      isFirst = false;
+    }
+    current.push(entry);
+    used += h;
+  }
+  if (current.length > 0 || pages.length === 0) pages.push(current);
+  return pages;
 }

@@ -5,20 +5,49 @@ import { Icon, ICONS } from '../ui/Icon';
 import { BORDER_DEFS, NUM_BORDER_DEFS, renderBorderSVG } from '../../lib/pageBorders';
 import type { NumberPosition, NumberStyle } from '../../types';
 
-// Full-resolution A5 page dimensions for the thumbnail viewBox
-const PREVIEW_W = 559;
-const PREVIEW_H = 794;
+const PREV_W = 559;
+const PREV_H = 794;
 
-function BorderThumb({ type, color, selected }: { type: string; color: string; selected: boolean }) {
-  const inner = type === 'none' ? '' : renderBorderSVG(type, PREVIEW_W, PREVIEW_H, color || '#1a1a1a');
+function BorderPagePreview({ type, color }: { type: string; color: string }) {
+  const inner = type !== 'none' ? renderBorderSVG(type, PREV_W, PREV_H, color || '#1a1a1a') : '';
   return (
     <svg
-      viewBox={`0 0 ${PREVIEW_W} ${PREVIEW_H}`}
-      width="100%"
-      style={{ display: 'block', background: '#fdfbf6', borderRadius: 4 }}
-      className={selected ? 'ring-2 ring-accent' : ''}
-      dangerouslySetInnerHTML={{ __html: inner || `<rect x="0" y="0" width="${PREVIEW_W}" height="${PREVIEW_H}" fill="#f5f0e8"/>` }}
+      viewBox={`0 0 ${PREV_W} ${PREV_H}`}
+      width="88"
+      height="125"
+      style={{ display: 'block', background: '#fdfbf6', borderRadius: 6, boxShadow: '0 2px 8px rgba(0,0,0,.12)' }}
+      dangerouslySetInnerHTML={{ __html: inner }}
     />
+  );
+}
+
+function NumBorderPreview({ type, color }: { type: string; color: string }) {
+  const labels: Record<string, string> = {
+    none: '42',
+    underline: '42',
+    bracket: '[ 42 ]',
+    diamond: '◆ 42 ◆',
+    'dash-wrap': '— 42 —',
+    'dot-wrap': '• 42 •',
+    circle: '42',
+  };
+  const text = labels[type] ?? '42';
+  const isCircle = type === 'circle';
+  return (
+    <div
+      className="flex items-center justify-center rounded-lg border border-line bg-[#fdfbf6]"
+      style={{ width: 88, height: 40, fontFamily: 'Spectral,serif', fontSize: 13, color }}
+    >
+      {isCircle ? (
+        <span style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: 24, height: 24, border: `1px solid ${color}`, borderRadius: '50%', fontSize: 11 }}>
+          42
+        </span>
+      ) : type === 'underline' ? (
+        <span style={{ borderBottom: `1px solid ${color}`, paddingBottom: 1 }}>{text}</span>
+      ) : (
+        <span>{text}</span>
+      )}
+    </div>
   );
 }
 
@@ -112,66 +141,72 @@ export function BookSettings({ onClose }: { onClose: () => void }) {
           <p className="text-[11px] text-muted">Ich = muqovaga yaqin (juft/toq sahifa mos qochadi).</p>
         </div>
 
-        {/* Page border — visual grid thumbnails */}
+        {/* Page border — select + live preview */}
         <div className="space-y-2 border-t border-line pt-4">
           <span className={sectionLabel}>Sahifa ramkasi</span>
-          <div className="grid grid-cols-4 gap-2">
-            {BORDER_DEFS.map((bd) => (
-              <button
-                key={bd.id}
-                onClick={() => setBorder({ type: bd.id })}
-                title={bd.label}
-                className={`flex flex-col items-center gap-1 p-1.5 rounded-lg border transition ${
-                  border.type === bd.id
-                    ? 'border-accent bg-accent/8'
-                    : 'border-line hover:bg-line/40'
-                }`}
+          <div className="flex items-start gap-4">
+            <div className="flex-1 space-y-2">
+              <select
+                value={border.type}
+                onChange={(e) => setBorder({ type: e.target.value })}
+                className={field}
               >
-                <div className="w-full aspect-[3/4]">
-                  <BorderThumb type={bd.id} color={border.color} selected={false} />
+                {BORDER_DEFS.map((bd) => (
+                  <option key={bd.id} value={bd.id}>{bd.label}</option>
+                ))}
+              </select>
+              {border.type !== 'none' && (
+                <div className="flex items-center gap-2">
+                  <span className="text-[11px] text-muted">Rang:</span>
+                  <input
+                    type="color"
+                    value={border.color}
+                    onChange={(e) => setBorder({ color: e.target.value })}
+                    className="w-8 h-7 rounded border border-line cursor-pointer"
+                  />
+                  <span className="tnum text-[11px] text-muted">{border.color}</span>
                 </div>
-                <span className={`text-[9px] leading-tight text-center truncate w-full ${border.type === bd.id ? 'text-accent font-medium' : 'text-muted'}`}>
-                  {bd.label}
-                </span>
-              </button>
-            ))}
-          </div>
-          {border.type !== 'none' && (
-            <div className="flex items-center gap-2 pt-1">
-              <span className="text-[11px] text-muted">Rang:</span>
-              <input
-                type="color"
-                value={border.color}
-                onChange={(e) => setBorder({ color: e.target.value })}
-                className="w-8 h-7 rounded border border-line cursor-pointer"
-              />
-              <span className="tnum text-[11px] text-muted">{border.color}</span>
+              )}
             </div>
-          )}
+            {/* Live page preview */}
+            <div className="shrink-0 flex flex-col items-center gap-1">
+              <BorderPagePreview type={border.type} color={border.color} />
+              <span className="text-[9px] text-muted">{BORDER_DEFS.find(b => b.id === border.type)?.label}</span>
+            </div>
+          </div>
         </div>
 
-        {/* Page number decorative border — select */}
+        {/* Page number decorative border — select + inline preview */}
         <div className="space-y-2 border-t border-line pt-4">
           <span className={sectionLabel}>Sahifa raqami bezagi</span>
-          <div className="flex items-center gap-3">
-            <select
-              value={border.numBorderType}
-              onChange={(e) => setBorder({ numBorderType: e.target.value })}
-              className={field}
-            >
-              {NUM_BORDER_DEFS.map((nb) => (
-                <option key={nb.id} value={nb.id}>{nb.label}</option>
-              ))}
-            </select>
-            {border.numBorderType !== 'none' && (
-              <input
-                type="color"
-                value={border.numBorderColor}
-                onChange={(e) => setBorder({ numBorderColor: e.target.value })}
-                className="w-9 h-9 rounded border border-line cursor-pointer shrink-0"
-                title="Rang"
-              />
-            )}
+          <div className="flex items-start gap-4">
+            <div className="flex-1 space-y-2">
+              <select
+                value={border.numBorderType}
+                onChange={(e) => setBorder({ numBorderType: e.target.value })}
+                className={field}
+              >
+                {NUM_BORDER_DEFS.map((nb) => (
+                  <option key={nb.id} value={nb.id}>{nb.label}</option>
+                ))}
+              </select>
+              {border.numBorderType !== 'none' && (
+                <div className="flex items-center gap-2">
+                  <span className="text-[11px] text-muted">Rang:</span>
+                  <input
+                    type="color"
+                    value={border.numBorderColor}
+                    onChange={(e) => setBorder({ numBorderColor: e.target.value })}
+                    className="w-8 h-7 rounded border border-line cursor-pointer"
+                  />
+                </div>
+              )}
+            </div>
+            {/* Number border preview */}
+            <div className="shrink-0 flex flex-col items-center gap-1">
+              <NumBorderPreview type={border.numBorderType} color={border.numBorderColor} />
+              <span className="text-[9px] text-muted">{NUM_BORDER_DEFS.find(n => n.id === border.numBorderType)?.label}</span>
+            </div>
           </div>
         </div>
 
